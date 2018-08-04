@@ -2,6 +2,9 @@
 name = "cosworth"
 version = "0.1.0"
 authors = ["Gus Cost <guscost@gmail.com>"]
+description = "A tool for making web services"
+repository = "https://github.com/guscost/cosworth"
+license-file = "./LICENSE"
 
 [dependencies]
 diesel = "1.3.2"
