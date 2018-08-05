@@ -8,34 +8,41 @@ extern crate serde;
 #[macro_use]
 extern crate cosworth;
 
-
-use actix_web::{http, server, App, Path, Responder};
-use serde::{Serialize, Deserialize};
+use actix_web::{http, pred, server, App, Error, HttpRequest, HttpResponse};
+use cosworth::response::json;
 
 
 #[derive(Serialize, Deserialize, Debug)]
-struct Widget<'a> {
-    id: u32,
-    name: &'a str,
+struct Widget {
+    id: String,
+    name: String,
 }
 
-fn to_json<T>(obj: &T) -> String
-where
-    T: Serialize
-{
-    return serde_json::to_string(&obj).unwrap();
-}
 
-fn index(info: Path<(u32, String)>) -> impl Responder {
-    let widget = Widget { id: info.0, name: &info.1 };
-    return to_json(&widget);
+fn index(req: &HttpRequest) -> Result<HttpResponse, Error> {
+    let id = req.match_info().query("id")?;
+    let name = req.match_info().query("name")?;
+
+    if id == "123" {
+        return Ok(req.build_response(http::StatusCode::PARTIAL_CONTENT)
+              .content_type("text/plain")
+              .body(hello!()));
+    } else {
+        let widget = Widget { id: id, name: name };
+        return Ok(json(&req, widget, http::StatusCode::OK)?);
+    }
 }
 
 fn main() {
     println!("{}", hello!());
     server::new(
         || App::new()
-            .route("/{id}/{name}/", http::Method::GET, index))
+            .resource("/{id}/{name}", |r| {
+                r.route()
+                 .filter(pred::Get())
+                 .filter(pred::Header("content-type", "application/json"))
+                 .f(index)
+            }))
         .bind("127.0.0.1:8080").unwrap()
         .run();
 }
