@@ -1,30 +1,41 @@
+extern crate actix_web;
+
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
+extern crate serde;
+
 #[macro_use]
 extern crate cosworth;
 
-// extern crate hyper;
 
-// use hyper::{Body, Response, Server};
-// use hyper::rt::Future;
-// use hyper::service::service_fn_ok;
+use actix_web::{http, server, App, Path, Responder};
+use serde::{Serialize, Deserialize};
 
-// static TEXT: &str = "Hello, World!";
 
-// fn hyper() {
-//     let addr = ([127, 0, 0, 1], 3000).into();
+#[derive(Serialize, Deserialize, Debug)]
+struct Widget<'a> {
+    id: u32,
+    name: &'a str,
+}
 
-//     let new_svc = || {
-//         service_fn_ok(|_req|{
-//             Response::new(Body::from(TEXT))
-//         })
-//     };
+fn to_json<T>(obj: &T) -> String
+where
+    T: Serialize
+{
+    return serde_json::to_string(&obj).unwrap();
+}
 
-//     let server = Server::bind(&addr)
-//         .serve(new_svc)
-//         .map_err(|e| eprintln!("server error: {}", e));
-
-//     hyper::rt::run(server);
-// }
+fn index(info: Path<(u32, String)>) -> impl Responder {
+    let widget = Widget { id: info.0, name: &info.1 };
+    return to_json(&widget);
+}
 
 fn main() {
     println!("{}", hello!());
+    server::new(
+        || App::new()
+            .route("/{id}/{name}/", http::Method::GET, index))
+        .bind("127.0.0.1:8080").unwrap()
+        .run();
 }
