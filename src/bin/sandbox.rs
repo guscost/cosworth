@@ -35,14 +35,15 @@ fn index(req: &HttpRequest) -> Result<HttpResponse, Error> {
 
 fn main() {
     println!("{}", hello!());
-    server::new(
-        || App::new()
+    server::new(|| {
+        App::new()
             .resource("/{id}/{name}", |r| {
                 r.route()
                  .filter(pred::Get())
                  .filter(pred::Header("content-type", "application/json"))
                  .f(index)
-            }))
-        .bind("127.0.0.1:8080").unwrap()
+            })
+    })
+        .bind("0.0.0.0:8080").unwrap()
         .run();
 }
