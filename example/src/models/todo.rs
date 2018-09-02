@@ -1,4 +1,4 @@
-//use diesel::prelude::*;
+use schema::todos;
 
 #[derive(Insertable)]
 #[table_name="todos"]

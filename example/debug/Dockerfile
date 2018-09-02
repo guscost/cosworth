@@ -7,10 +7,11 @@ RUN USER=root cargo new --lib build
 
 # preliminary layers cache dependencies
 WORKDIR /build
-COPY ./Cargo.toml ./Cargo.lock* /build
+COPY ./diesel.toml ./Cargo.toml ./Cargo.lock* /build/
 RUN cargo build
-RUN rm /build/src/lib.rs
+RUN cargo install diesel_cli --no-default-features --features "postgres"
 RUN rm /build/target/x86_64-unknown-linux-musl/debug/deps/libcosworth-*
+RUN rm /build/src/lib.rs
 
 # compile and run project in debug mode
 EXPOSE 8080

@@ -7,10 +7,10 @@ RUN USER=root cargo new --lib build
 
 # preliminary layers cache dependencies
 WORKDIR /build
-COPY ./Cargo.toml ./Cargo.lock* /build
+COPY ./diesel.toml ./Cargo.toml ./Cargo.lock* /build/
 RUN cargo build --release
-RUN rm /build/src/lib.rs
 RUN rm /build/target/x86_64-unknown-linux-musl/release/deps/libcosworth-*
+RUN rm /build/src/lib.rs
 
 # compile project in release mode
 COPY ./src /build/src
