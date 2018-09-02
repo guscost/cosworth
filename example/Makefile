@@ -2,12 +2,12 @@
 .PHONY: build/* debug deploy
 
 build/debug:
-	@time docker build -f ./debug.dockerfile -t cosworth/debug:latest .
+	@time docker build -f ./debug/Dockerfile -t cosworth/debug:latest .
 
 build/deploy:
-	@time docker build -f ./deploy.dockerfile --target build \
+	@time docker build -f ./build/Dockerfile --target build \
 		-t cosworth/build:latest .
-	@time docker build -f ./deploy.dockerfile --target deploy \
+	@time docker build -f ./build/Dockerfile --target deploy \
 		-t cosworth/deploy:latest .
 
 build/cleanup:

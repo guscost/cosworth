@@ -1,0 +1,7 @@
+[package]
+name = "cosworth_example"
+version = "0.1.1"
+authors = ["Gus Cost <guscost@gmail.com>"]
+
+[dependencies]
+cosworth = "0.1.1"
