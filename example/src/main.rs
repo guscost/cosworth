@@ -11,34 +11,48 @@ extern crate serde;
 #[macro_use]
 extern crate cosworth;
 
+// std
 use std::env;
+
+// diesel
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
+use diesel::r2d2::ConnectionManager;
+use diesel::r2d2::Pool;
 
+// actix-web 
 use actix_web::{http, pred, server, App, Error, HttpRequest, HttpResponse};
+
+// cosworth
 use cosworth::response::json;
 
 mod schema;
 mod models;
 
-fn establish_connection() -> PgConnection {
-    let database_url = env::var("DATABASE_URL")
-        .expect("DATABASE_URL must be set");
-    PgConnection::establish(&database_url)
-        .expect(&format!("Error connecting to {}", database_url))
+// state with connection pool
+struct AppState {
+    pool: Pool<ConnectionManager<PgConnection>>,
 }
 
-fn index(req: &HttpRequest) -> Result<HttpResponse, Error> {
-    let id: String = req.match_info().query("id")?;
-    let name = req.match_info().query("name")?;
+// index handler
+fn index(req: &HttpRequest<AppState>) -> Result<HttpResponse, Error> {
+    let query_id: String = req.match_info().query("id")?;
+    let query_name = req.match_info().query("name")?;
 
-    // TODO: do something with the database
-    let _connection = establish_connection();
+    // get some data from the real database
+    use schema::todos::dsl::*;
+    use models::todo::*;
+    let connection = req.state().pool.get().expect("Error loading connection");
+    let mut results = todos.filter(done.eq(false))
+        .limit(5)
+        .load::<Todo>(&connection)
+        .expect("Error loading posts");
 
-    match id.parse::<i32>() {
+    match query_id.parse::<i64>() {
         Ok(n) => {
-            let widget = models::todo::Todo { id: n, name: name, done: false };
-            return Ok(json(&req, widget, http::StatusCode::OK)?);
+            let widget = models::todo::Todo { id: n, name: query_name, done: false };
+            results.push(widget);
+            return Ok(json(&req, results, http::StatusCode::OK)?);
         },
         Err(_e) => {
             return Ok(req.build_response(http::StatusCode::BAD_REQUEST)
@@ -48,10 +62,17 @@ fn index(req: &HttpRequest) -> Result<HttpResponse, Error> {
     }
 }
 
+// app setup
 fn main() {
+
     println!("{}", hello!());
-    server::new(|| {
-        App::new()
+
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL not found.");
+    let manager = ConnectionManager::<PgConnection>::new(database_url);
+    let pool = diesel::r2d2::Pool::builder().build(manager).expect("Failed to create pool.");
+
+    server::new(move || {
+        App::with_state(AppState{pool: pool.clone()})
             .resource("/{id}/{name}", |r| {
                 r.route()
                  .filter(pred::Get())

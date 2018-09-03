@@ -9,7 +9,7 @@ pub struct NewTodo<'a> {
 #[derive(Queryable)]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Todo {
-    pub id: i32,
+    pub id: i64,
     pub name: String,
     pub done: bool,
 }
