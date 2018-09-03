@@ -15,7 +15,10 @@ build/cleanup:
 	docker images -qa -f "dangling=true" | xargs -I {} docker rmi {}
 
 deploy: build/deploy build/cleanup
-	docker run -it --rm -p 8080:8080 cosworth-example/deploy:latest
+	docker run -it --rm \
+		--network cosworth-example \
+		-e DATABASE_URL=postgres://root@cosworth-example-database/cosworth_example \
+		-p 8000:8080 cosworth-example/deploy:latest
 
 # Debug targets
 debug/network:
@@ -26,19 +29,22 @@ debug/database: debug/network
 	-docker run -d --rm \
 		--network cosworth-example \
 		--name cosworth-example-database \
-		cosworth-example/database:latest
+		-p 0:5432 cosworth-example/database:latest
 
-debug/migrate: command=sh -c "/root/.cargo/bin/diesel migration --migration-dir ./src/migrations run"
-debug/migrate: debug
+debug/migrate: debug/database
+	docker run -it --rm \
+		--network cosworth-example \
+		-e DATABASE_URL=postgres://cosworth-example-database/cosworth_example \
+		cosworth-example/debug:latest \
+		sh -c "/root/.cargo/bin/diesel migration --migration-dir ./src/migrations run"
 
-debug: build/debug build/cleanup debug/network debug/database
+debug: build/debug build/cleanup debug/migrate
 	docker run -it --rm \
 		--network cosworth-example \
 		--name cosworth-example \
 		-e DATABASE_URL=postgres://cosworth-example-database/cosworth_example \
 		-v $(shell pwd)/src:/build/src \
-		-p 8080:8080 \
-		cosworth-example/debug:latest $(command)
+		-p 8080:8080 cosworth-example/debug:latest
 
 # Clean target
 clean:
