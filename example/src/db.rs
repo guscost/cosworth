@@ -34,7 +34,9 @@ impl Handler<CreateUser> for DbExecutor {
 
         //let uuid = format!("{}", uuid::Uuid::new_v4());
         let new_todo = NewTodo {
+            id: &123,
             name: &msg.name,
+            done: &false
         };
 
         let conn: &PgConnection = &self.0.get().unwrap();
@@ -42,7 +44,10 @@ impl Handler<CreateUser> for DbExecutor {
         diesel::insert_into(todos)
             .values(&new_todo)
             .execute(conn)
-            .map_err(|_| error::ErrorInternalServerError("Error inserting person"))?;
+            .map_err(|e| {
+                println!("{:?}", e);
+                error::ErrorInternalServerError("Error inserting person")
+            })?;
 
         let mut items = todos
             .filter(name.eq(&msg.name))

@@ -3,7 +3,9 @@ use schema::todos;
 #[derive(Insertable)]
 #[table_name="todos"]
 pub struct NewTodo<'a> {
+    pub id: &'a i64,
     pub name: &'a str,
+    pub done: &'a bool,
 }
 
 #[derive(Queryable)]

@@ -19,7 +19,6 @@ use std::env;
 
 // diesel
 use diesel::prelude::*;
-use diesel::pg::PgConnection;
 use diesel::r2d2::ConnectionManager;
 use diesel::r2d2::Pool;
 
@@ -38,25 +37,17 @@ mod models;
 
 use db::{CreateUser, DbExecutor};
 
-#[macro_export]
-macro_rules! ooooooo {
-    () => {
-        cosworth::hello()
-    }
-}
 
-
-// state with connection pool
+// state with connection pool(s)
 struct AppState {
     db_pool: Pool<ConnectionManager<PgConnection>>,
     db_addr: Addr<DbExecutor>,
 }
 
-// async request
+// async request gets sent to actix "DbExecutor" actor
 fn create(
     (name, state): (Path<String>, State<AppState>),
 ) -> FutureResponse<HttpResponse> {
-    // send async `CreateUser` message to a `DbExecutor`
     state
         .db_addr
         .send(CreateUser {
@@ -70,7 +61,7 @@ fn create(
         .responder()
 }
 
-// index handler
+// basic index handler
 fn index(req: &HttpRequest<AppState>) -> Result<HttpResponse, Error> {
     let query_id: String = req.match_info().query("id")?;
     let query_name = req.match_info().query("name")?;
@@ -84,6 +75,7 @@ fn index(req: &HttpRequest<AppState>) -> Result<HttpResponse, Error> {
         .load::<Todo>(&connection)
         .expect("Error loading posts");
 
+    // return possible responses
     match query_id.parse::<i64>() {
         Ok(n) => {
             let widget = models::todo::Todo { id: n, name: query_name, done: false };
@@ -100,7 +92,7 @@ fn index(req: &HttpRequest<AppState>) -> Result<HttpResponse, Error> {
 
 // app setup
 fn main() {
-    println!("{}", ooooooo!());
+    println!("{}", hello!());
 
     // DB connection pool
     let db_url = env::var("DATABASE_URL").expect("DATABASE_URL not found.");
@@ -110,7 +102,7 @@ fn main() {
     // heh heh heh
     let db_pool_1 = db_pool.clone();
 
-    // Actix stuff
+    // actix stuff
     ::std::env::set_var("RUST_LOG", "actix_web=info");
     env_logger::init();
     let sys = actix::System::new("cosworth-example");
