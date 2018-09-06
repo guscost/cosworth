@@ -1,4 +1,7 @@
+extern crate actix;
 extern crate actix_web;
+extern crate env_logger;
+extern crate futures;
 
 #[macro_use]
 extern crate diesel;
@@ -21,17 +24,50 @@ use diesel::r2d2::ConnectionManager;
 use diesel::r2d2::Pool;
 
 // actix-web 
-use actix_web::{http, pred, server, App, Error, HttpRequest, HttpResponse};
+use futures::Future;
+use actix::prelude::*;
+use actix_web::{http, middleware, pred, server, App, Path, State, Error,
+                HttpRequest, HttpResponse, FutureResponse, AsyncResponder};
 
 // cosworth
 use cosworth::response::json;
 
+mod db;
 mod schema;
 mod models;
+
+use db::{CreateUser, DbExecutor};
+
+#[macro_export]
+macro_rules! ooooooo {
+    () => {
+        cosworth::hello()
+    }
+}
+
 
 // state with connection pool
 struct AppState {
     db_pool: Pool<ConnectionManager<PgConnection>>,
+    db_addr: Addr<DbExecutor>,
+}
+
+// async request
+fn create(
+    (name, state): (Path<String>, State<AppState>),
+) -> FutureResponse<HttpResponse> {
+    // send async `CreateUser` message to a `DbExecutor`
+    state
+        .db_addr
+        .send(CreateUser {
+            name: name.into_inner(),
+        })
+        .from_err()
+        .and_then(|res| match res {
+            Ok(user) => Ok(HttpResponse::Ok().json(user)),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        })
+        .responder()
 }
 
 // index handler
@@ -64,15 +100,26 @@ fn index(req: &HttpRequest<AppState>) -> Result<HttpResponse, Error> {
 
 // app setup
 fn main() {
+    println!("{}", ooooooo!());
 
-    println!("{}", hello!());
-
+    // DB connection pool
     let db_url = env::var("DATABASE_URL").expect("DATABASE_URL not found.");
     let db_manager = ConnectionManager::<PgConnection>::new(db_url);
     let db_pool = Pool::builder().build(db_manager).expect("Failed to create pool.");
 
+    // heh heh heh
+    let db_pool_1 = db_pool.clone();
+
+    // Actix stuff
+    ::std::env::set_var("RUST_LOG", "actix_web=info");
+    env_logger::init();
+    let sys = actix::System::new("cosworth-example");
+    let addr = SyncArbiter::start(3, move || DbExecutor(db_pool_1.clone()));
+
     server::new(move || {
-        App::with_state(AppState{db_pool: db_pool.clone()})
+        App::with_state(AppState{db_pool: db_pool.clone(), db_addr: addr.clone()})
+            .middleware(middleware::Logger::default())
+            .resource("/create/{name}", |r| r.method(http::Method::POST).with(create))
             .resource("/{id}/{name}", |r| {
                 r.route()
                  .filter(pred::Get())

@@ -1,0 +1,36 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug cosworth_example",
+      "cargo": {
+        "args": [
+          "build",
+          "--bin=cosworth_example"
+        ]
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "env": { "DATABASE_URL": "postgres://root@localhost:32768/cosworth_example" }
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug tests in cosworth_example",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--bin=cosworth_example"
+        ]
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}
