@@ -31,7 +31,7 @@ mod models;
 
 // state with connection pool
 struct AppState {
-    pool: Pool<ConnectionManager<PgConnection>>,
+    db_pool: Pool<ConnectionManager<PgConnection>>,
 }
 
 // index handler
@@ -42,7 +42,7 @@ fn index(req: &HttpRequest<AppState>) -> Result<HttpResponse, Error> {
     // get some data from the real database
     use schema::todos::dsl::*;
     use models::todo::*;
-    let connection = req.state().pool.get().expect("Error loading connection");
+    let connection = req.state().db_pool.get().expect("Error loading connection");
     let mut results = todos.filter(done.eq(false))
         .limit(5)
         .load::<Todo>(&connection)
@@ -67,12 +67,12 @@ fn main() {
 
     println!("{}", hello!());
 
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL not found.");
-    let manager = ConnectionManager::<PgConnection>::new(database_url);
-    let pool = diesel::r2d2::Pool::builder().build(manager).expect("Failed to create pool.");
+    let db_url = env::var("DATABASE_URL").expect("DATABASE_URL not found.");
+    let db_manager = ConnectionManager::<PgConnection>::new(db_url);
+    let db_pool = Pool::builder().build(db_manager).expect("Failed to create pool.");
 
     server::new(move || {
-        App::with_state(AppState{pool: pool.clone()})
+        App::with_state(AppState{db_pool: db_pool.clone()})
             .resource("/{id}/{name}", |r| {
                 r.route()
                  .filter(pred::Get())
