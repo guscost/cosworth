@@ -1,5 +1,8 @@
 //! request processing actor
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::collections::HashMap;
+
+use bytes::Bytes;
+use serde_json;
 
 use actix::prelude::*;
 use actix_web::*;
@@ -9,17 +12,10 @@ use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 //use uuid;
 
+use helpers::{get_millis, RawRequest, RawResponse};
 use models::todo::*;
 use schema;
 
-/// timestamp snowflake ID thing
-fn get_millis() -> u64 {
-  let start = SystemTime::now();
-  let since_the_epoch = start.duration_since(UNIX_EPOCH)
-    .expect("Time went backwards");
-  return since_the_epoch.as_secs() * 1000 +
-         since_the_epoch.subsec_nanos() as u64 / 1_000_000 << 22;
-}
 
 /// request processing actor. We are going to run 3 of them in parallel.
 pub struct Processor(pub Pool<ConnectionManager<PgConnection>>);
@@ -31,29 +27,29 @@ impl Actor for Processor {
 
 /// message for creating a new todo
 pub struct CreateTodo {
-  pub body: String,
+  pub request: RawRequest,
 }
 impl Message for CreateTodo {
-  type Result = Result<HttpResponse, Error>;
+  type Result = Result<RawResponse, Error>;
 }
 
 impl Handler<CreateTodo> for Processor {
-  type Result = Result<HttpResponse, Error>;
+  type Result = Result<RawResponse, Error>;
 
   fn handle(&mut self, msg: CreateTodo, _: &mut Self::Context) -> Self::Result {
     use self::schema::todos::dsl::*;
 
-    match serde_json::from_slice::<TodoJson>(&body) {
+    match serde_json::from_slice::<TodoJson>(&msg.request.body) {
       Ok(obj)  => {
-        
+
         let new_id: u64;
-        match msg.id {
+        match obj.id {
             Some(x) => new_id = x,
             None => new_id = get_millis()
         }
 
         let new_done: bool;
-        match msg.done {
+        match obj.done {
             Some(x) => new_done = x,
             None => new_done = false
         }
@@ -76,23 +72,30 @@ impl Handler<CreateTodo> for Processor {
             })?;
 
         let mut items = todos
-            .filter(name.eq(&msg.name))
+            .filter(name.eq(&obj.name))
             .load::<Todo>(conn)
             .map_err(|_| error::ErrorInternalServerError("Error loading person"))?;
 
         let queried_todo = items.pop().unwrap();
 
-        return Ok(HttpResponse::Ok().json(TodoJson {
-          id: Some(queried_todo.id as u64),
-          name: queried_todo.name,
-          done: Some(queried_todo.done)
-        }));
+        return Ok(RawResponse {
+          status: 200,
+          cookies: HashMap::new(),
+          headers: HashMap::new(),
+          body: Bytes::from(serde_json::to_string(&TodoJson {
+            id: Some(queried_todo.id as u64),
+            name: queried_todo.name,
+            done: Some(queried_todo.done)
+          })?)
+        });
       },
-      Err(_) => {
-        let response = HttpResponse::BadRequest()
-          .header("Content-Type", "text/javascript")
-          .body(format!("{{\"error\": \"{}\"}}", e));
-        return Box::new(futures::future::err(req));
+      Err(e) => {
+        return Ok(RawResponse {
+          status: 200,
+          cookies: HashMap::new(),
+          headers: HashMap::new(),
+          body: Bytes::from(format!("{{\"error\": \"{}\"}}", e))
+        });
       }
     }
   }

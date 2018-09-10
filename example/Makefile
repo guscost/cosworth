@@ -18,7 +18,7 @@ deploy: build/deploy build/cleanup
 	docker run -it --rm \
 		--network cosworth-example \
 		-e DATABASE_URL=postgres://root@cosworth-example-database/cosworth_example \
-		-p 8000:8080 cosworth-example/deploy:latest
+		-p 8080:8080 cosworth-example/deploy:latest
 
 # Debug targets
 debug/network:
