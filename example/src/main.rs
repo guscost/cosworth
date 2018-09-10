@@ -22,43 +22,70 @@ use diesel::prelude::*;
 use diesel::r2d2::ConnectionManager;
 use diesel::r2d2::Pool;
 
-// actix-web 
-use futures::Future;
+// actix-web
+use futures::{Future, Stream};
 use actix::prelude::*;
-use actix_web::{http, middleware, pred, server, App, Path, State, Error,
-                HttpRequest, HttpResponse, FutureResponse, AsyncResponder};
+use actix_web::{
+    http, middleware, pred, server, App, AsyncResponder, Error,
+    HttpMessage, HttpRequest, HttpResponse
+};
 
 // cosworth
 use cosworth::response::json;
 
+// example project module
 mod db;
 mod schema;
 mod models;
 
-use db::{CreateUser, DbExecutor};
+use db::{CreateTodo, DbExecutor};
+use models::todo::{TodoJson};
 
 
-// state with connection pool(s)
+/// state with connection pool(s)
 struct AppState {
     db_pool: Pool<ConnectionManager<PgConnection>>,
     db_addr: Addr<DbExecutor>,
 }
 
-// async request gets sent to actix "DbExecutor" actor
-fn create(
-    (name, state): (Path<String>, State<AppState>),
-) -> FutureResponse<HttpResponse> {
-    state
-        .db_addr
-        .send(CreateUser {
-            name: name.into_inner(),
-        })
+/// async POST handler
+fn create(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
+    let state = req.state();
+    return Box::new(req.body()
         .from_err()
-        .and_then(|res| match res {
-            Ok(user) => Ok(HttpResponse::Ok().json(user)),
-            Err(_) => Ok(HttpResponse::InternalServerError().into()),
-        })
-        .responder()
+        .and_then(|body| {
+            match serde_json::from_slice::<TodoJson>(&body) {
+                Ok(obj)  => {
+                    let response = Box::new(state.db_addr
+                        .send(CreateTodo {
+                            id: None,
+                            name: obj.name,
+                            done: None,
+                        })
+                        .from_err()
+                        .and_then(|res| match res {
+                            Ok(obj) => Ok(HttpResponse::Ok().json(TodoJson {
+                                id: Some(obj.id as u64),
+                                name: obj.name,
+                                done: Some(obj.done)
+                            })),
+                            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+                        }));
+                    return response;    
+                }
+                Err(e) => {
+                    let response = HttpResponse::BadRequest()
+                        .header("Content-Type", "text/javascript")
+                        .body(format!("{{\"error\": \"{}\"}}", e));
+                    return Box::new(futures::future::err(req));
+                    // let result = futures::future::from_err(response);
+                    // return Box::new(result.and_then(|x| x).map_err());
+                    // // e.and_then(|x| {
+                        
+                    // // })
+                }
+            }
+        });
 }
 
 // basic index handler
@@ -70,16 +97,24 @@ fn index(req: &HttpRequest<AppState>) -> Result<HttpResponse, Error> {
     use schema::todos::dsl::*;
     use models::todo::*;
     let connection = req.state().db_pool.get().expect("Error loading connection");
-    let mut results = todos.filter(done.eq(false))
+    let db_results = todos.filter(done.eq(false))
         .limit(5)
         .load::<Todo>(&connection)
-        .expect("Error loading posts");
+        .expect("Error loading todos");
+
+    let mut results: Vec<TodoJson> = db_results.iter().map(|r| {
+        TodoJson { id: Some(r.id as u64), name: r.name.clone(), done: Some(r.done) }
+    }).collect();
 
     // return possible responses
-    match query_id.parse::<i64>() {
+    match query_id.parse::<u64>() {
         Ok(n) => {
-            let widget = models::todo::Todo { id: n, name: query_name, done: false };
-            results.push(widget);
+            let todo = models::todo::TodoJson { 
+                id: Some(n),
+                name: query_name,
+                done: Some(false)
+            };
+            results.push(todo);
             return Ok(json(&req, results, http::StatusCode::OK)?);
         },
         Err(_e) => {
@@ -111,11 +146,16 @@ fn main() {
     server::new(move || {
         App::with_state(AppState{db_pool: db_pool.clone(), db_addr: addr.clone()})
             .middleware(middleware::Logger::default())
-            .resource("/create/{name}", |r| r.method(http::Method::POST).with(create))
+            //.resource("/create/{name}", |r| r.method(http::Method::POST).with(create))
+            .resource("/create", |r| {
+                r.route()
+                 .filter(pred::Post())
+                 .filter(pred::Header("content-type", "application/json"))
+                 .f(create)
+            })
             .resource("/{id}/{name}", |r| {
                 r.route()
                  .filter(pred::Get())
-                 .filter(pred::Header("content-type", "application/json"))
                  .f(index)
             })
     })
