@@ -1,22 +1,35 @@
-use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use actix_web::http::HeaderMap;
 use bytes::Bytes;
 
 
 /// important parts of an HTTP request
 pub struct RawRequest {
-  pub cookies: HashMap<String, String>,
-  pub headers: HashMap<String, String>,
+  pub method: String,
+  //pub cookies: HashMap<String, String>,
+  pub headers: HeaderMap,
   pub body: Bytes,
 }
 
 /// important parts of an HTTP response
 pub struct RawResponse {
   pub status: u16,
-  pub cookies: HashMap<String, String>,
-  pub headers: HashMap<String, String>,
+  //pub cookies: HashMap<String, String>,
+  pub headers: HeaderMap,
   pub body: Bytes,
+}
+
+/// default values for an HTTP response
+impl Default for RawResponse {
+    fn default() -> RawResponse {
+      return RawResponse {
+        status: 404,
+        //cookies: HashMap::new(),
+        headers: HeaderMap::new(),
+        body: Bytes::new()
+      };
+    }
 }
 
 

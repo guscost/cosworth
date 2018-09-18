@@ -1,6 +1,6 @@
-extern crate actix_web;
-extern crate serde_json;
-extern crate serde;
+use actix_web;
+use serde;
+use serde_json;
 
 
 // /// Extend actix_web Json helper with Respondable trait

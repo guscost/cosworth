@@ -17,7 +17,6 @@ extern crate cosworth;
 
 // std
 use std::env;
-use std::collections::HashMap;
 
 // diesel
 use diesel::prelude::*;
@@ -33,15 +32,13 @@ use actix_web::{
 };
 
 // cosworth
+use cosworth::helpers::RawRequest;
 use cosworth::response::json;
 
 // example project modules
-mod helpers;
 mod models;
 mod processor;
 mod schema;
-
-use helpers::RawRequest;
 
 
 /// state with connection pool(s)
@@ -58,8 +55,8 @@ fn create(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error 
     .and_then(move |body| {
       return req.state().processors
         .send(processor::CreateTodo {request: RawRequest {
-          cookies: HashMap::new(),
-          headers: HashMap::new(),
+          method: req.method().to_string(),
+          headers: req.headers().to_owned(),
           body: body
         }})
         .from_err()

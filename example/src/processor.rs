@@ -1,18 +1,17 @@
 //! request processing actor
-use std::collections::HashMap;
-
 use bytes::Bytes;
 use serde_json;
 
 use actix::prelude::*;
 use actix_web::*;
+use actix_web::http::HeaderMap;
 
 use diesel;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 //use uuid;
 
-use helpers::{get_millis, RawRequest, RawResponse};
+use cosworth::helpers::{get_millis, RawRequest, RawResponse};
 use models::todo::*;
 use schema;
 
@@ -80,8 +79,7 @@ impl Handler<CreateTodo> for Processor {
 
         return Ok(RawResponse {
           status: 200,
-          cookies: HashMap::new(),
-          headers: HashMap::new(),
+          headers: HeaderMap::new(),
           body: Bytes::from(serde_json::to_string(&TodoJson {
             id: Some(queried_todo.id as u64),
             name: queried_todo.name,
@@ -92,8 +90,7 @@ impl Handler<CreateTodo> for Processor {
       Err(e) => {
         return Ok(RawResponse {
           status: 200,
-          cookies: HashMap::new(),
-          headers: HashMap::new(),
+          headers: HeaderMap::new(),
           body: Bytes::from(format!("{{\"error\": \"{}\"}}", e))
         });
       }
