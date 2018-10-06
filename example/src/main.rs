@@ -33,18 +33,19 @@ use actix_web::{
 
 // cosworth
 use cosworth::helpers::RawRequest;
+use cosworth::processor::{Processor, ProcessRequest};
 use cosworth::response::json;
 
 // example project modules
+mod endpoints;
 mod models;
-mod processor;
 mod schema;
 
 
 /// state with connection pool(s)
 struct AppState {
   raw_db_pool: Pool<ConnectionManager<PgConnection>>,
-  processors: Addr<processor::Processor>,
+  processors: Addr<Processor>,
 }
 
 /// async POST handler
@@ -54,7 +55,7 @@ fn create(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error 
     .from_err()
     .and_then(move |body| {
       return req.state().processors
-        .send(processor::CreateTodo {request: RawRequest {
+        .send(ProcessRequest {endpoint: &endpoints::TodoCreateEndpoint{}, request: RawRequest {
           method: req.method().to_string(),
           headers: req.headers().to_owned(),
           body: body
@@ -78,7 +79,7 @@ fn index(req: &HttpRequest<AppState>) -> Result<HttpResponse, Error> {
   use models::todo::*;
   let connection = req.state().raw_db_pool.get().expect("Error loading connection");
   let db_results = todos.filter(done.eq(false))
-    .limit(5)
+    .limit(50)
     .load::<Todo>(&connection)
     .expect("Error loading todos");
 
@@ -121,7 +122,7 @@ fn main() {
   ::std::env::set_var("RUST_LOG", "actix_web=info");
   env_logger::init();
   let _sys = actix::System::new("cosworth-example");
-  let addr = SyncArbiter::start(3, move || processor::Processor(db_pool.clone()));
+  let addr = SyncArbiter::start(3, move || Processor(db_pool.clone()));
 
   server::new(move || {
     App::with_state(AppState{raw_db_pool: raw_db_pool.clone(), processors: addr.clone()})

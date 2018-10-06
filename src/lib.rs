@@ -8,6 +8,7 @@ extern crate serde;
 pub mod endpoints;
 pub mod helpers;
 pub mod macros;
+pub mod processor;
 pub mod response;
 
 pub const VERSION: &'static str = env!("CARGO_PKG_VERSION");

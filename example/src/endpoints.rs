@@ -1,44 +1,25 @@
-//! request processing actor
 use bytes::Bytes;
 use serde_json;
 
-use actix::prelude::*;
-use actix_web::*;
-use actix_web::http::HeaderMap;
-
 use diesel;
 use diesel::prelude::*;
-use diesel::r2d2::{ConnectionManager, Pool};
-//use uuid;
+use actix_web::*;
+use actix_web::error::ErrorBadRequest;
+use actix_web::http::HeaderMap;
 
+use cosworth::endpoints::Endpoint;
 use cosworth::helpers::{get_millis, RawRequest, RawResponse};
+use cosworth::processor::Processor;
+
 use models::todo::*;
 use schema;
 
-
-/// request processing actor. We are going to run 3 of them in parallel.
-pub struct Processor(pub Pool<ConnectionManager<PgConnection>>);
-
-impl Actor for Processor {
-  type Context = SyncContext<Self>;
-}
-
-
-/// message for creating a new todo
-pub struct CreateTodo {
-  pub request: RawRequest,
-}
-impl Message for CreateTodo {
-  type Result = Result<RawResponse, Error>;
-}
-
-impl Handler<CreateTodo> for Processor {
-  type Result = Result<RawResponse, Error>;
-
-  fn handle(&mut self, msg: CreateTodo, _: &mut Self::Context) -> Self::Result {
+pub struct TodoCreateEndpoint {}
+impl Endpoint for TodoCreateEndpoint {
+  fn post(&self, context: &Processor, request: RawRequest) -> Result<RawResponse, Error> {
     use self::schema::todos::dsl::*;
 
-    match serde_json::from_slice::<TodoJson>(&msg.request.body) {
+    match serde_json::from_slice::<TodoJson>(&request.body) {
       Ok(obj)  => {
 
         let new_id: u64;
@@ -60,7 +41,7 @@ impl Handler<CreateTodo> for Processor {
             done: new_done
         };
 
-        let conn: &PgConnection = &self.0.get().unwrap();
+        let conn: &PgConnection = &context.0.get().unwrap();
 
         diesel::insert_into(todos)
             .values(&new_todo)
@@ -88,11 +69,7 @@ impl Handler<CreateTodo> for Processor {
         });
       },
       Err(e) => {
-        return Ok(RawResponse {
-          status: 200,
-          headers: HeaderMap::new(),
-          body: Bytes::from(format!("{{\"error\": \"{}\"}}", e))
-        });
+        return Err(ErrorBadRequest(e));
       }
     }
   }
