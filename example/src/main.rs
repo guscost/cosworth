@@ -16,6 +16,7 @@ extern crate serde;
 extern crate cosworth;
 
 // std
+use std::collections::HashMap;
 use std::env;
 
 // diesel
@@ -54,15 +55,27 @@ fn create(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error 
   return req.body()
     .from_err()
     .and_then(move |body| {
-      return req.state().processors
-        .send(ProcessRequest {endpoint: &endpoints::TodoCreateEndpoint{}, request: RawRequest {
+      let mut headers = HashMap::new();
+      for (k, v) in req.headers().iter() {
+        headers.insert(k.as_str().to_owned(), v.to_str().unwrap().to_owned());
+      }
+      let process_request = ProcessRequest {
+        endpoint: &endpoints::TodoCreateEndpoint{},
+        request: RawRequest {
           method: req.method().to_string(),
-          headers: req.headers().to_owned(),
+          headers: headers,
           body: body
-        }})
+        }
+      };
+      return req.state().processors
+        .send(process_request)
         .from_err()
         .and_then(|res| match res {
-          Ok(obj) => Ok(HttpResponse::Ok().body(obj.body)),
+          Ok(obj) => {
+            let mut builder = HttpResponse::build(http::StatusCode::from_u16(obj.status).unwrap());
+            for (k, v) in obj.headers.iter() { builder.header(&k[..], v.to_owned()); }
+            Ok(builder.content_type("application/json").body(obj.body))
+          },
           Err(_) => Ok(HttpResponse::InternalServerError().into()),
         });
     })
@@ -130,7 +143,6 @@ fn main() {
       //.resource("/create/{name}", |r| r.method(http::Method::POST).with(create))
       .resource("/create", |r| {
         r.route()
-         .filter(pred::Post())
          .filter(pred::Header("content-type", "application/json"))
          .f(create)
       })

@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use bytes::Bytes;
 use serde_json;
 
@@ -5,7 +6,6 @@ use diesel;
 use diesel::prelude::*;
 use actix_web::*;
 use actix_web::error::ErrorBadRequest;
-use actix_web::http::HeaderMap;
 
 use cosworth::endpoints::Endpoint;
 use cosworth::helpers::{get_millis, RawRequest, RawResponse};
@@ -15,6 +15,7 @@ use models::todo::*;
 use schema;
 
 pub struct TodoCreateEndpoint {}
+
 impl Endpoint for TodoCreateEndpoint {
   fn post(&self, context: &Processor, request: RawRequest) -> Result<RawResponse, Error> {
     use self::schema::todos::dsl::*;
@@ -48,19 +49,19 @@ impl Endpoint for TodoCreateEndpoint {
             .execute(conn)
             .map_err(|e| {
                 println!("{:?}", e);
-                error::ErrorInternalServerError("Error inserting person")
+                error::ErrorInternalServerError("Error inserting todo")
             })?;
 
         let mut items = todos
             .filter(name.eq(&obj.name))
             .load::<Todo>(conn)
-            .map_err(|_| error::ErrorInternalServerError("Error loading person"))?;
+            .map_err(|_| error::ErrorInternalServerError("Error loading todos"))?;
 
         let queried_todo = items.pop().unwrap();
 
         return Ok(RawResponse {
           status: 200,
-          headers: HeaderMap::new(),
+          headers: HashMap::new(),
           body: Bytes::from(serde_json::to_string(&TodoJson {
             id: Some(queried_todo.id as u64),
             name: queried_todo.name,
