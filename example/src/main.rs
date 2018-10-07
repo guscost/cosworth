@@ -16,6 +16,7 @@ extern crate serde;
 extern crate cosworth;
 
 // std
+use std::collections::HashMap;
 use std::env;
 
 // diesel
@@ -54,10 +55,14 @@ fn create(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error 
   return req.body()
     .from_err()
     .and_then(move |body| {
+      let mut path_params = HashMap::new();
+      for (k, v) in req.match_info().iter() { path_params.insert(k.to_owned(), v.to_owned()); }
       let process_request = ProcessRequest {
         endpoint: &endpoints::TodoCreateEndpoint{},
         request: RawRequest {
           method: req.method().to_string(),
+          path_params: path_params,
+          query_params: req.query().to_owned(),
           headers: req.headers().to_owned(),
           body: body
         }
