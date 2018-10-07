@@ -16,7 +16,6 @@ extern crate serde;
 extern crate cosworth;
 
 // std
-use std::collections::HashMap;
 use std::env;
 
 // diesel
@@ -55,15 +54,11 @@ fn create(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error 
   return req.body()
     .from_err()
     .and_then(move |body| {
-      let mut headers = HashMap::new();
-      for (k, v) in req.headers().iter() {
-        headers.insert(k.as_str().to_owned(), v.to_str().unwrap().to_owned());
-      }
       let process_request = ProcessRequest {
         endpoint: &endpoints::TodoCreateEndpoint{},
         request: RawRequest {
           method: req.method().to_string(),
-          headers: headers,
+          headers: req.headers().to_owned(),
           body: body
         }
       };
@@ -73,7 +68,7 @@ fn create(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error 
         .and_then(|res| match res {
           Ok(obj) => {
             let mut builder = HttpResponse::build(http::StatusCode::from_u16(obj.status).unwrap());
-            for (k, v) in obj.headers.iter() { builder.header(&k[..], v.to_owned()); }
+            for (k, v) in obj.headers.iter() { builder.header(k, v.to_owned()); }
             Ok(builder.content_type("application/json").body(obj.body))
           },
           Err(_) => Ok(HttpResponse::InternalServerError().into()),

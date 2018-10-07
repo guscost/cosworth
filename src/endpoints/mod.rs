@@ -1,5 +1,5 @@
-use std::collections::HashMap;
-use actix_web::Error;
+use actix_web::error::Error;
+use actix_web::http::HeaderMap;
 use helpers::{RawRequest, RawResponse};
 use processor::Processor;
 
@@ -33,21 +33,21 @@ pub trait Endpoint: Sync {
   #[allow(unused_variables)]
   fn options(&self, context: &Processor, request: RawRequest) -> Result<RawResponse, Error> {
     // Tell CORS to go away
-    let mut headers = HashMap::new();
+    let mut headers = HeaderMap::new();
     headers.insert(
-      "Access-Control-Allow-Headers".to_owned(),
+      "Access-Control-Allow-Headers",
       match request.headers.get("Access-Control-Request-Headers") {
         Some(x) => x.to_owned(),
-        None => "Accept, Accept-Language, Content-Language, Content-Type".to_owned()
+        None => "Accept, Accept-Language, Content-Language, Content-Type".parse().unwrap()
       }
     );
     headers.insert(
-      "Access-Control-Allow-Methods".to_owned(),
-      "GET, POST, PUT, DELETE, OPTIONS".to_owned()
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, DELETE, OPTIONS".parse().unwrap()
     );
     headers.insert(
-      "Access-Control-Allow-Origin".to_owned(),
-      "*".to_owned()
+      "Access-Control-Allow-Origin",
+      "*".parse().unwrap()
     );
     return Ok(RawResponse {
       status: 200,

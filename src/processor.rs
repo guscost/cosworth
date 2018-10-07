@@ -1,6 +1,6 @@
 //! request processing actor
 use actix::prelude::*;
-use actix_web::*;
+use actix_web::error::Error;
 
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
