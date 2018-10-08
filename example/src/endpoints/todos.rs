@@ -13,9 +13,10 @@ use cosworth::processor::Processor;
 use models::todo::*;
 use schema;
 
-pub struct TodoCreateEndpoint {}
 
-impl Endpoint for TodoCreateEndpoint {
+pub struct TodosEndpoint {}
+
+impl Endpoint for TodosEndpoint {
   fn post(&self, context: &Processor, request: RawRequest) -> Result<RawResponse, Error> {
     use self::schema::todos::dsl::*;
 
