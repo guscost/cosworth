@@ -6,18 +6,17 @@ use diesel::prelude::*;
 use actix_web::error::*;
 use actix_web::http::HeaderMap;
 
-use cosworth::endpoints::Endpoint;
-use cosworth::helpers::{get_millis, RawRequest, RawResponse};
-use cosworth::processor::Processor;
+use cosworth::prelude::*;
 
 use models::todo::*;
 use schema;
 
 
-pub struct TodosEndpoint {}
+pub struct TodosEndpoint{}
+endpoint!(TodosEndpoint, create_todo);
 
 impl Endpoint for TodosEndpoint {
-  fn post(&self, context: &Processor, request: RawRequest) -> Result<RawResponse, Error> {
+  fn post(&self, context: &Processor, request: Request) -> Result<Response, Error> {
     use self::schema::todos::dsl::*;
 
     match serde_json::from_slice::<TodoJson>(&request.body) {
@@ -59,7 +58,7 @@ impl Endpoint for TodosEndpoint {
 
         let queried_todo = items.pop().unwrap();
 
-        return Ok(RawResponse {
+        return Ok(Response {
           status: 200,
           headers: HeaderMap::new(),
           body: Bytes::from(serde_json::to_string(&TodoJson {

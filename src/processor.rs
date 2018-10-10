@@ -6,7 +6,7 @@ use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 
 use endpoints::Endpoint;
-use helpers::{RawRequest, RawResponse};
+use helpers::{Request, Response};
 // use models::todo::*;
 // use schema;
 
@@ -19,16 +19,16 @@ impl Actor for Processor {
 
 /// message for processing requests
 pub struct ProcessRequest<'a> {
-  pub request: RawRequest,
+  pub request: Request,
   pub endpoint: &'a Endpoint
 }
 impl<'a> Message for ProcessRequest<'a> {
-  type Result = Result<RawResponse, Error>;
+  type Result = Result<Response, Error>;
 }
 
 /// process a request
 impl<'a> Handler<ProcessRequest<'a>> for Processor {
-  type Result = Result<RawResponse, Error>;
+  type Result = Result<Response, Error>;
 
   fn handle(&mut self, msg: ProcessRequest, _: &mut Self::Context) -> Self::Result {
     return msg.endpoint.handle(&self, msg.request);

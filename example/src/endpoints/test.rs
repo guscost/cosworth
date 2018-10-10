@@ -6,15 +6,14 @@ use actix_web::error::*;
 use actix_web::http::HeaderMap;
 
 use cosworth;
-use cosworth::endpoints::Endpoint;
-use cosworth::helpers::{RawRequest, RawResponse};
-use cosworth::processor::Processor;
+use cosworth::prelude::*;
 
 
 pub struct IndexEndpoint {}
+endpoint!(IndexEndpoint, index);
 
 impl Endpoint for IndexEndpoint {
-  fn get(&self, context: &Processor, request: RawRequest) -> Result<RawResponse, Error> {
+  fn get(&self, context: &Processor, request: Request) -> Result<Response, Error> {
     let path_id = request.path_params.get("id").unwrap();
     let path_name = request.path_params.get("name").unwrap();
 
@@ -40,14 +39,14 @@ impl Endpoint for IndexEndpoint {
           done: Some(false)
         };
         results.push(todo);
-        return Ok(RawResponse {
+        return Ok(Response {
           status: 200,
           headers: HeaderMap::new(),
           body: Bytes::from(serde_json::to_string(&results)?)
         });
       },
       Err(_e) => {
-        return Ok(RawResponse {
+        return Ok(Response {
           status: 200,
           headers: HeaderMap::new(),
           body: Bytes::from(hello!())

@@ -1,7 +1,7 @@
 #[macro_export]
 macro_rules! endpoint {
-  ($name:ident, $type:ident) => {
-    fn $name(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
+  ($type:ident, $name:ident) => {
+    pub fn $name(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
       let req = req.clone();
       return req.body()
         .from_err()
@@ -10,7 +10,7 @@ macro_rules! endpoint {
           for (k, v) in req.match_info().iter() { path_params.insert(k.to_owned(), v.to_owned()); }
           let process_request = ProcessRequest {
             endpoint: &$type{},
-            request: RawRequest {
+            request: Request {
               method: req.method().to_string(),
               path_params: path_params,
               query_params: req.query().to_owned(),

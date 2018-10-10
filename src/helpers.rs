@@ -5,7 +5,7 @@ use bytes::Bytes;
 use actix_web::http::HeaderMap;
 
 /// important parts of an HTTP request
-pub struct RawRequest {
+pub struct Request {
   pub method: String,
   pub path_params: HashMap<String, String>,
   pub query_params: HashMap<String, String>,
@@ -14,16 +14,16 @@ pub struct RawRequest {
 }
 
 /// important parts of an HTTP response
-pub struct RawResponse {
+pub struct Response {
   pub status: u16,
   pub headers: HeaderMap,
   pub body: Bytes,
 }
 
 /// default values for an HTTP response
-impl Default for RawResponse {
-    fn default() -> RawResponse {
-      return RawResponse {
+impl Default for Response {
+    fn default() -> Response {
+      return Response {
         status: 404,
         headers: HeaderMap::new(),
         body: Bytes::new()

@@ -16,7 +16,6 @@ extern crate serde;
 extern crate cosworth;
 
 // std
-use std::collections::HashMap;
 use std::env;
 
 // diesel
@@ -25,31 +24,19 @@ use diesel::r2d2::ConnectionManager;
 use diesel::r2d2::Pool;
 
 // actix-web
-use futures::Future;
 use actix::prelude::*;
-use actix_web::{
-  http, middleware, pred, server, App, AsyncResponder, Error,
-  HttpMessage, HttpRequest, HttpResponse
-};
+use actix_web::{middleware, pred, server, App};
 
 // cosworth
-use cosworth::helpers::RawRequest;
-use cosworth::processor::{Processor, ProcessRequest};
+use cosworth::prelude::*;
 
 // example project modules
 mod endpoints;
 mod models;
 mod schema;
 
-use endpoints::test::IndexEndpoint;
-use endpoints::todos::TodosEndpoint;
-
-// state with connection pool
-struct AppState { processors: Addr<Processor> }
-
-// macros to register endpoints
-endpoint!(index, IndexEndpoint);
-endpoint!(create_todo, TodosEndpoint);
+use endpoints::test::index;
+use endpoints::todos::create_todo;
 
 // app setup
 fn main() {
