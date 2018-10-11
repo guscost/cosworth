@@ -1,6 +1,6 @@
 use actix_web::error::Error;
 use actix_web::http::HeaderMap;
-use helpers::{Request, Response};
+use utilities::{Request, Response};
 use processor::Processor;
 
 pub trait Endpoint: Sync {

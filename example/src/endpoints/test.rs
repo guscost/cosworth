@@ -20,7 +20,7 @@ impl Endpoint for IndexEndpoint {
     // get some data from the real database
     use schema::todos::dsl::*;
     use models::todo::*;
-    let conn: &PgConnection = &context.0.get().unwrap();
+    let conn: &PgConnection = &context.db.get().unwrap();
     let db_results = todos.filter(done.eq(false))
       .limit(50)
       .load::<Todo>(conn)

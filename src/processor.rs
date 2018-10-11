@@ -6,13 +6,15 @@ use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 
 use endpoints::Endpoint;
-use helpers::{Request, Response};
+use utilities::{Request, Response};
 // use models::todo::*;
 // use schema;
 
 
 /// request processing actor. We are going to run 3 of them in parallel.
-pub struct Processor(pub Pool<ConnectionManager<PgConnection>>);
+pub struct Processor{
+  pub db: Pool<ConnectionManager<PgConnection>>
+}
 impl Actor for Processor {
   type Context = SyncContext<Self>;
 }

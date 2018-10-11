@@ -1,7 +1,7 @@
 #[macro_export]
 macro_rules! endpoint {
-  ($type:ident, $name:ident) => {
-    pub fn $name(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
+  ($endpoint:ident, $handler:ident) => {
+    pub fn $handler(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
       let req = req.clone();
       return req.body()
         .from_err()
@@ -9,7 +9,7 @@ macro_rules! endpoint {
           let mut path_params = HashMap::new();
           for (k, v) in req.match_info().iter() { path_params.insert(k.to_owned(), v.to_owned()); }
           let process_request = ProcessRequest {
-            endpoint: &$type{},
+            endpoint: &$endpoint{},
             request: Request {
               method: req.method().to_string(),
               path_params: path_params,

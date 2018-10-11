@@ -25,7 +25,7 @@ use diesel::r2d2::Pool;
 
 // actix-web
 use actix::prelude::*;
-use actix_web::{middleware, pred, server, App};
+use actix_web::{middleware, server, App};
 
 // cosworth
 use cosworth::prelude::*;
@@ -35,6 +35,7 @@ mod endpoints;
 mod models;
 mod schema;
 
+// import endpoints
 use endpoints::test::index;
 use endpoints::todos::create_todo;
 
@@ -43,29 +44,22 @@ fn main() {
   println!("{}", hello!());
 
   // DB connection pool
-  let db_url = env::var("DATABASE_URL").expect("DATABASE_URL not found.");
-  let db_manager = ConnectionManager::<PgConnection>::new(db_url);
-  let db_pool = Pool::builder().build(db_manager).expect("Failed to create pool.");
+  let _db_url = env::var("DATABASE_URL").expect("DATABASE_URL not found.");
+  let _db_manager = ConnectionManager::<PgConnection>::new(_db_url);
+  let db_pool = Pool::builder().build(_db_manager).expect("Failed to create pool.");
 
   // actix stuff
   ::std::env::set_var("RUST_LOG", "actix_web=info");
   env_logger::init();
   let _sys = actix::System::new("cosworth-example");
-  let addr = SyncArbiter::start(3, move || Processor(db_pool.clone()));
+  let addr = SyncArbiter::start(3, move || Processor{db: db_pool.clone()});
 
   server::new(move || {
-    App::with_state(AppState{processors: addr.clone()})
-      .middleware(middleware::Logger::default())
-      .resource("/create", |r| {
-        r.route()
-         .filter(pred::Header("content-type", "application/json"))
-         .f(create_todo)
-      })
-      .resource("/{id}/{name}", |r| {
-        r.route()
-         .filter(pred::Get())
-         .f(index)
-      })
+    let app = App::with_state(AppState{processors: addr.clone()})
+      .middleware(middleware::Logger::default());
+    let app = app.resource("/create", |r| r.route().f(create_todo));
+    let app = app.resource("/{id}/{name}", |r| r.route().f(index));
+    return app;
   })
     .bind("0.0.0.0:8080").unwrap()
     .run();

@@ -41,7 +41,7 @@ impl Endpoint for TodosEndpoint {
             done: new_done
         };
 
-        let conn: &PgConnection = &context.0.get().unwrap();
+        let conn: &PgConnection = &context.db.get().unwrap();
 
         diesel::insert_into(todos)
             .values(&new_todo)

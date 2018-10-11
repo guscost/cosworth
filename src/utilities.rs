@@ -1,8 +1,15 @@
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use bytes::Bytes;
+use actix::Addr;
 use actix_web::http::HeaderMap;
+use bytes::Bytes;
+
+use processor::Processor;
+
+
+// state with processor pool
+pub struct AppState { pub processors: Addr<Processor> }
 
 /// important parts of an HTTP request
 pub struct Request {
