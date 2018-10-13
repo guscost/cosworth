@@ -8,8 +8,8 @@ use bytes::Bytes;
 use processor::Processor;
 
 
-// state with processor pool
-pub struct AppState { pub processors: Addr<Processor> }
+// context with processor pool
+pub struct Context { pub processors: Addr<Processor> }
 
 /// important parts of an HTTP request
 pub struct Request {

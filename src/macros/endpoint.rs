@@ -1,7 +1,7 @@
 #[macro_export]
 macro_rules! endpoint {
   ($endpoint:ident, $handler:ident) => {
-    pub fn $handler(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
+    pub fn $handler(req: &HttpRequest<Context>) -> Box<Future<Item = HttpResponse, Error = Error>> {
       let req = req.clone();
       return req.body()
         .from_err()

@@ -18,14 +18,10 @@ extern crate cosworth;
 // std
 use std::env;
 
-// diesel
-use diesel::prelude::*;
-use diesel::r2d2::ConnectionManager;
-use diesel::r2d2::Pool;
-
 // actix-web
-use actix::prelude::*;
-use actix_web::{middleware, server, App};
+use actix::SyncArbiter;
+use actix_web::{server, App};
+use actix_web::middleware::*;
 
 // cosworth
 use cosworth::prelude::*;
@@ -44,9 +40,8 @@ fn main() {
   println!("{}", hello!());
 
   // DB connection pool
-  let _db_url = env::var("DATABASE_URL").expect("DATABASE_URL not found.");
-  let _db_manager = ConnectionManager::<PgConnection>::new(_db_url);
-  let db_pool = Pool::builder().build(_db_manager).expect("Failed to create pool.");
+  let db_url = env::var("DATABASE_URL").expect("DATABASE_URL not found.");
+  let db_pool = postgres!(db_url);
 
   // actix stuff
   ::std::env::set_var("RUST_LOG", "actix_web=info");
@@ -55,10 +50,14 @@ fn main() {
   let addr = SyncArbiter::start(3, move || Processor{db: db_pool.clone()});
 
   server::new(move || {
-    let app = App::with_state(AppState{processors: addr.clone()})
-      .middleware(middleware::Logger::default());
-    let app = app.resource("/create", |r| r.route().f(create_todo));
-    let app = app.resource("/{id}/{name}", |r| r.route().f(index));
+    let context = Context{processors: addr.clone()};
+    let app = app!(context);
+
+    middleware!(app, Logger);
+
+    route!(app, "/create", create_todo); 
+    route!(app, "/{id}/{name}", index);
+
     return app;
   })
     .bind("0.0.0.0:8080").unwrap()
