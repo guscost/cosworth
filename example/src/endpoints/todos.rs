@@ -1,19 +1,38 @@
 use bytes::Bytes;
-use serde_json;
-
+use cosworth::prelude::*;
 use diesel;
 use diesel::prelude::*;
-
-use cosworth::prelude::*;
+use serde_json;
 
 use models::todo::*;
 use schema;
 
 
-pub struct TodosEndpoint{}
-endpoint!(TodosEndpoint, create_todo);
+pub struct TodoListEndpoint{}
+endpoint!(TodoListEndpoint, todo_list);
 
-impl Endpoint for TodosEndpoint {
+impl Endpoint for TodoListEndpoint {
+
+  fn get(&self, context: &Processor, request: Request) -> Result<Response, Error> {
+    use schema::todos::dsl::*;
+    use models::todo::*;
+    let conn: &PgConnection = &context.db.get().unwrap();
+    let db_results = todos.filter(done.eq(false))
+      .limit(50)
+      .load::<Todo>(conn)
+      .expect("Error loading todos");
+
+    let results: Vec<TodoJson> = db_results.iter().map(|r| {
+      TodoJson { id: Some(r.id as u64), name: r.name.clone(), done: Some(r.done) }
+    }).collect();
+
+    return Ok(Response {
+      status: 200,
+      headers: HeaderMap::new(),
+      body: Bytes::from(serde_json::to_string(&results)?)
+    });
+  }
+
   fn post(&self, context: &Processor, request: Request) -> Result<Response, Error> {
     use self::schema::todos::dsl::*;
 
@@ -71,4 +90,5 @@ impl Endpoint for TodosEndpoint {
       }
     }
   }
+
 }
