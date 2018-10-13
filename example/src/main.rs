@@ -31,18 +31,17 @@ use endpoints::todos::create_todo;
 fn main() {
   println!("{}", hello!());
 
-  // DB connection pool
-  let db_url = env::var("DATABASE_URL").expect("DATABASE_URL not found.");
-  let db_pool = postgres!(db_url);
-
-  // actix stuff
+  // start logging
   env::set_var("RUST_LOG", "actix_web=info");
   env_logger::init();
-  let _sys = ActixSystem::new("cosworth-example");
-  let addr = ActixSyncArbiter::start(3, move || Processor{db: db_pool.clone()});
+
+  // DB connection pool, and address for "request processor" actors
+  let db_url = env::var("DATABASE_URL").expect("DATABASE_URL not found.");
+  let db_pool = postgres!(db_url);
+  let processors = processors!(3, db_pool);
 
   server::new(move || {
-    let context = Context{processors: addr.clone()};
+    let context = Context{processors: processors.clone()};
     let app = app!(context);
 
     middleware!(app, Logger);
