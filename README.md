@@ -6,15 +6,15 @@ A Rust framework for building JSON web services
 
 This is a tool for building web services to be compiled into Rust static binaries and deployed into Docker containers. It is very much a work in progress, so there is no tutorial yet.
 
-It should be useful in production environments where safety and *predictable* performance take precedence over built-in frontends, formats other than JSON, full compliance with [JSON API](http://jsonapi.org), streaming responses, etc. The production server should compile into a Docker image that weighs less than 25MB and responds faster than anything written in a memory-managed language (in the worst case).
+It should be useful in production environments where safety and *predictable* performance take precedence over built-in frontends, formats other than JSON, streaming responses, etc. The production server should compile into a Docker image that weighs less than 25MB and responds faster (in the worst case) than just about anything that uses a memory-managed language.
 
 ## Goals
 
 Web services built with this tool have the following goals, in approximate order of importance:
 
 1. **Safe:** The server should be difficult to exploit or DoS.
-2. **Predictable:** The server should not slow down during operation.
-3. **Efficient:** The server should not waste CPU, memory, or disk space.
+2. **Efficient:** The server should not waste CPU, memory, or disk space.
+3. **Predictable:** The server should not slow down during operation.
 4. **Fast:** The server should handle a lot of requests quickly.
 6. **Simple:** The server should not be more complex than is necessary.
 5. **Easy:** The server should not be difficult to develop or debug.
@@ -34,10 +34,11 @@ By being both prescriptive and modest about the scope from the start, the hope i
 
 Support is planned for these features:
 
-- Asynchronous request handling
+- Asynchronous request transfer
+- Synchronous request processing
 - Postgres with connection pool and ORM
 - Signed bearer token authentication
-- Authorization with User and Token models
+- Authorization with Token model
 - Authorization with Redis lookup
 - Authorization with proxy HTTP request
 - REST resource validation and serialization
