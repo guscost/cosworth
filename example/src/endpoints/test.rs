@@ -2,8 +2,6 @@ use bytes::Bytes;
 use serde_json;
 
 use diesel::prelude::*;
-use actix_web::error::*;
-use actix_web::http::HeaderMap;
 
 use cosworth;
 use cosworth::prelude::*;

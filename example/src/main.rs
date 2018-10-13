@@ -1,6 +1,4 @@
 extern crate bytes;
-extern crate actix;
-extern crate actix_web;
 extern crate env_logger;
 extern crate futures;
 
@@ -17,11 +15,6 @@ extern crate cosworth;
 
 // std
 use std::env;
-
-// actix-web
-use actix::SyncArbiter;
-use actix_web::{server, App};
-use actix_web::middleware::*;
 
 // cosworth
 use cosworth::prelude::*;
@@ -44,10 +37,10 @@ fn main() {
   let db_pool = postgres!(db_url);
 
   // actix stuff
-  ::std::env::set_var("RUST_LOG", "actix_web=info");
+  env::set_var("RUST_LOG", "actix_web=info");
   env_logger::init();
-  let _sys = actix::System::new("cosworth-example");
-  let addr = SyncArbiter::start(3, move || Processor{db: db_pool.clone()});
+  let _sys = ActixSystem::new("cosworth-example");
+  let addr = ActixSyncArbiter::start(3, move || Processor{db: db_pool.clone()});
 
   server::new(move || {
     let context = Context{processors: addr.clone()};
