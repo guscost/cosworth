@@ -13,7 +13,7 @@ endpoint!(TodoListEndpoint, todo_list);
 
 impl Endpoint for TodoListEndpoint {
 
-  fn get(&self, context: &Processor, request: Request) -> Result<Response, Error> {
+  fn get(&self, context: &Processor, _request: Request) -> Result<Response, Error> {
     use schema::todos::dsl::*;
     use models::todo::*;
     let conn: &PgConnection = &context.db.get().unwrap();

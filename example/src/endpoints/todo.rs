@@ -45,7 +45,7 @@ impl Endpoint for TodoDetailEndpoint {
       },
       Err(_e) => {
         return Ok(Response {
-          status: 200,
+          status: 400,
           headers: HeaderMap::new(),
           body: Bytes::from(hello!())
         });
