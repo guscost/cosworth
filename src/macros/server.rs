@@ -1,7 +1,6 @@
 #[macro_export]
 macro_rules! processors {
     ($num:tt, $db_pool:ident) => {{
-        let _sys = ActixSystem::new("cosworth-system");
         ActixSyncArbiter::start(3, move || Processor{db: $db_pool.clone()})
     }}
 }
