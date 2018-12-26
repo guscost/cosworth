@@ -30,10 +30,16 @@ fn main() {
   std::env::set_var("RUST_LOG", "actix_web=info");
   env_logger::init();
 
+  // read hostname param
+  let host = match std::env::var("COSWORTH_HOST") {
+    Ok(v) => v,
+    Err(_e) => "0.0.0.0:8080".to_owned()
+  };
+
   // determine number of request processors
   let processors_num = match std::env::var("COSWORTH_PROCESSORS_NUM") {
-      Ok(v) => v.parse::<usize>().expect("COSTWORTH_PROCESSORS_NUM not found."),
-      Err(_e) => num_cpus::get()
+    Ok(v) => v.parse::<usize>().expect("COSWORTH_PROCESSORS_NUM must be an integer."),
+    Err(_e) => num_cpus::get()
   };
 
   // create DB connection pool and address for request processor actors
@@ -42,9 +48,9 @@ fn main() {
 
   // init processor actors
   println!("Starting {} request processors...", processors_num);
-  let sys = ActixSystem::new("cosworth-system");
   let processors = processors!(processors_num, db_pool);
-
+  
+  println!("Serving requests at http://{}...", host);
   server::new(move || {
     let context = Context{processors: processors.clone()};
     let app = app!(context);
@@ -57,9 +63,6 @@ fn main() {
     return app;
   })
     .maxconnrate(4096)
-    .bind("0.0.0.0:8080").unwrap()
-    .start();
-
-    println!("Server running at http://0.0.0.0:8080");
-    sys.run();
+    .bind(host).unwrap()
+    .run();
 }
