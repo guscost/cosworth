@@ -46,11 +46,14 @@ fn main() {
   let db_url = std::env::var("COSWORTH_DATABASE_URL").expect("COSWORTH_DATABASE_URL not found.");
   let db_pool = postgres!(db_url);
 
+  // start actix system
+  let sys = ActixSystem::new("cosworth-system");
+
   // init processor actors
   println!("Starting {} request processors...", processors_num);
   let processors = processors!(processors_num, db_pool);
   
-  println!("Serving requests at http://{}...", host);
+  // start server
   server::new(move || {
     let context = Context{processors: processors.clone()};
     let app = app!(context);
@@ -63,6 +66,10 @@ fn main() {
     return app;
   })
     .maxconnrate(4096)
-    .bind(host).unwrap()
-    .run();
+    .bind(host.to_owned()).unwrap()
+    .start();
+
+  // run actix system
+  println!("Serving requests at http://{}...", host);
+  sys.run();
 }

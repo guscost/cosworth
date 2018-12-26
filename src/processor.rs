@@ -1,4 +1,3 @@
-//! request processing actor
 use actix::prelude::*;
 use actix_web::error::Error;
 
@@ -7,12 +6,10 @@ use diesel::r2d2::{ConnectionManager, Pool};
 
 use endpoints::Endpoint;
 use utilities::{Request, Response};
-// use models::todo::*;
-// use schema;
 
 
-/// request processing actor. We are going to run 3 of them in parallel.
-pub struct Processor{
+/// request processing actor. We are going to run N of them in parallel.
+pub struct Processor {
   pub db: Pool<ConnectionManager<PgConnection>>
 }
 impl Actor for Processor {
