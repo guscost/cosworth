@@ -12,7 +12,7 @@ pub struct TodoListEndpoint{}
 
 impl Endpoint for TodoListEndpoint {
 
-  fn get(&self, context: &Processor, _request: Request) -> Result<Response, Error> {
+  fn get(&self, context: &Context, _request: Request) -> Result<Response, Error> {
     use schema::todos::dsl::*;
     use models::todo::*;
     let conn: &PgConnection = &context.db.get().unwrap();
@@ -32,7 +32,7 @@ impl Endpoint for TodoListEndpoint {
     });
   }
 
-  fn post(&self, context: &Processor, request: Request) -> Result<Response, Error> {
+  fn post(&self, context: &Context, request: Request) -> Result<Response, Error> {
     use self::schema::todos::dsl::*;
 
     match serde_json::from_slice::<TodoJson>(&request.body) {

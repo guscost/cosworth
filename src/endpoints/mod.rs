@@ -1,10 +1,10 @@
 use actix_web::error::Error;
 use actix_web::http::HeaderMap;
 use utilities::{Request, Response};
-use processor::Processor;
+use processor::Context;
 
 pub trait Endpoint: Sync {
-  fn handle (&self, context: &Processor, request: Request) -> Result<Response, Error> {
+  fn handle (&self, context: &Context, request: Request) -> Result<Response, Error> {
     match &request.method[..] {
       "GET" => self.get(context, request),
       "POST" => self.post(context, request),
@@ -15,23 +15,23 @@ pub trait Endpoint: Sync {
     }
   }
   #[allow(unused_variables)]
-  fn get(&self, context: &Processor, request: Request) -> Result<Response, Error> {
+  fn get(&self, context: &Context, request: Request) -> Result<Response, Error> {
     return Ok(Response { status: 405, ..Default::default() });
   }
   #[allow(unused_variables)]
-  fn post(&self, context: &Processor, request: Request) -> Result<Response, Error> {
+  fn post(&self, context: &Context, request: Request) -> Result<Response, Error> {
     return Ok(Response { status: 405, ..Default::default() });
   }
   #[allow(unused_variables)]
-  fn put(&self, context: &Processor, request: Request) -> Result<Response, Error> {
+  fn put(&self, context: &Context, request: Request) -> Result<Response, Error> {
     return Ok(Response { status: 405, ..Default::default() });
   }
   #[allow(unused_variables)]
-  fn delete(&self, context: &Processor, request: Request) -> Result<Response, Error> {
+  fn delete(&self, context: &Context, request: Request) -> Result<Response, Error> {
     return Ok(Response { status: 405, ..Default::default() });
   }
   #[allow(unused_variables)]
-  fn options(&self, context: &Processor, request: Request) -> Result<Response, Error> {
+  fn options(&self, context: &Context, request: Request) -> Result<Response, Error> {
     // Tell CORS to go away
     let mut headers = HeaderMap::new();
     headers.insert(

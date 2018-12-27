@@ -5,11 +5,11 @@ use actix::Addr;
 use actix_web::http::HeaderMap;
 use bytes::Bytes;
 
-use processor::Processor;
+use processor::Context;
 
 
-// context with processor pool
-pub struct Context { pub processors: Addr<Processor> }
+// actix app state with processor pool
+pub struct AppState { pub processors: Addr<Context> }
 
 /// important parts of an HTTP request
 pub struct Request {

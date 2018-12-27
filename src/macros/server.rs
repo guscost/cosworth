@@ -1,11 +1,4 @@
 #[macro_export]
-macro_rules! processors {
-  ($num:tt, $db_pool:ident) => {{
-    ActixSyncArbiter::start(3, move || Processor{db: $db_pool.clone()})
-  }}
-}
-
-#[macro_export]
 macro_rules! cosworth {
   (context!($db_pool:tt) $($tail:tt)*) => {
     // create actix system
@@ -23,11 +16,14 @@ macro_rules! cosworth {
 
     // init processor actors
     println!("Starting {} request processors...", processors_num);
-    let processors = processors!(processors_num, $db_pool);
+    let processors = ActixSyncArbiter::start(
+      processors_num,
+      move || Context{db: $db_pool.clone()}
+    );
 
     // start actix server
     server::new(move || {
-      let context = Context{processors: processors.clone()};
+      let context = AppState{processors: processors.clone()};
       let app = App::with_state(context);
       cosworth!(app $($tail)*);
       return app;
@@ -53,7 +49,7 @@ macro_rules! cosworth {
           .and_then(move |body| {
           let mut path_params = HashMap::new();
           for (k, v) in req.match_info().iter() { path_params.insert(k.to_owned(), v.to_owned()); }
-          let process_request = ProcessRequest {
+          let process_request = RequestMessage {
             endpoint: &$endpoint{},
             request: Request {
               method: req.method().to_string(),

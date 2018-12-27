@@ -9,27 +9,27 @@ use utilities::{Request, Response};
 
 
 /// request processing actor. We are going to run N of them in parallel.
-pub struct Processor {
+pub struct Context {
   pub db: Pool<ConnectionManager<PgConnection>>
 }
-impl Actor for Processor {
+impl Actor for Context {
   type Context = SyncContext<Self>;
 }
 
 /// message for processing requests
-pub struct ProcessRequest<'a> {
+pub struct RequestMessage<'a> {
   pub request: Request,
   pub endpoint: &'a Endpoint
 }
-impl<'a> Message for ProcessRequest<'a> {
+impl<'a> Message for RequestMessage<'a> {
   type Result = Result<Response, Error>;
 }
 
 /// process a request
-impl<'a> Handler<ProcessRequest<'a>> for Processor {
+impl<'a> Handler<RequestMessage<'a>> for Context {
   type Result = Result<Response, Error>;
 
-  fn handle(&mut self, msg: ProcessRequest, _: &mut Self::Context) -> Self::Result {
+  fn handle(&mut self, msg: RequestMessage, _: &mut Self::Context) -> Self::Result {
     return msg.endpoint.handle(&self, msg.request);
   }
 }
