@@ -9,21 +9,18 @@ macro_rules! cosworth {
       Ok(v) => v,
       Err(_e) => "0.0.0.0:8080".to_owned()
     };
-    let processors_num = match std::env::var("COSWORTH_PROCESSORS") {
-      Ok(v) => v.parse::<usize>().expect("COSWORTH_PROCESSORS must be an integer."),
+    let workers_num = match std::env::var("COSWORTH_WORKERS") {
+      Ok(v) => v.parse::<usize>().expect("COSWORTH_WORKERS must be an integer."),
       Err(_e) => num_cpus()
     };
 
-    // init processor actors
-    println!("Starting {} request processors...", processors_num);
-    let processors = ActixSyncArbiter::start(
-      processors_num,
-      move || Context{db: $db_pool.clone()}
-    );
+    // init workers
+    println!("Starting {} request workers...", workers_num);
+    let workers = ActixSyncArbiter::start(workers_num, move || Context{db: $db_pool.clone()});
 
     // start actix server
     server::new(move || {
-      let context = AppState{processors: processors.clone()};
+      let context = AppState{workers: workers.clone()};
       let app = App::with_state(context);
       cosworth!(app $($tail)*);
       return app;
@@ -49,7 +46,7 @@ macro_rules! cosworth {
           .and_then(move |body| {
           let mut path_params = HashMap::new();
           for (k, v) in req.match_info().iter() { path_params.insert(k.to_owned(), v.to_owned()); }
-          let process_request = RequestMessage {
+          let request_message = RequestMessage {
             endpoint: &$endpoint{},
             request: Request {
               method: req.method().to_string(),
@@ -59,8 +56,8 @@ macro_rules! cosworth {
               body: body
             }
           };
-          return req.state().processors
-            .send(process_request)
+          return req.state().workers
+            .send(request_message)
             .from_err()
             .and_then(|res| match res {
               Ok(obj) => {

@@ -29,7 +29,7 @@ fn main() {
   std::env::set_var("RUST_LOG", "actix_web=info");
   env_logger::init();
 
-  // create DB connection pool and address for request processor actors
+  // create DB connection pool
   let db_url = std::env::var("COSWORTH_DATABASE_URL").expect("COSWORTH_DATABASE_URL not found.");
   let db_pool = postgres!(db_url);
 

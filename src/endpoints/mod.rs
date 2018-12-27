@@ -1,7 +1,7 @@
 use actix_web::error::Error;
 use actix_web::http::HeaderMap;
-use utilities::{Request, Response};
-use processor::Context;
+use http::{Request, Response};
+use workers::Context;
 
 pub trait Endpoint: Sync {
   fn handle (&self, context: &Context, request: Request) -> Result<Response, Error> {

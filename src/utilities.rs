@@ -1,42 +1,4 @@
-use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
-
-use actix::Addr;
-use actix_web::http::HeaderMap;
-use bytes::Bytes;
-
-use processor::Context;
-
-
-// actix app state with processor pool
-pub struct AppState { pub processors: Addr<Context> }
-
-/// important parts of an HTTP request
-pub struct Request {
-  pub method: String,
-  pub path_params: HashMap<String, String>,
-  pub query_params: HashMap<String, String>,
-  pub headers: HeaderMap,
-  pub body: Bytes,
-}
-
-/// important parts of an HTTP response
-pub struct Response {
-  pub status: u16,
-  pub headers: HeaderMap,
-  pub body: Bytes,
-}
-
-/// default values for an HTTP response
-impl Default for Response {
-    fn default() -> Response {
-      return Response {
-        status: 404,
-        headers: HeaderMap::new(),
-        body: Bytes::new()
-      };
-    }
-}
 
 
 /// timestamp snowflake ID generator

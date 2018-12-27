@@ -8,11 +8,12 @@ extern crate serde_json;
 extern crate serde;
 
 pub mod endpoints;
+pub mod http;
 pub mod macros;
 pub mod prelude;
-pub mod processor;
 pub mod response;
 pub mod utilities;
+pub mod workers;
 
 pub const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 

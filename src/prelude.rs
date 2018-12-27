@@ -10,5 +10,6 @@ pub use actix_web::{http, server, App, AsyncResponder, HttpMessage,
   HttpRequest, HttpResponse};
 
 pub use super::endpoints::Endpoint;
-pub use super::utilities::{get_millis, AppState, Request, Response};
-pub use super::processor::{Context, RequestMessage};
+pub use super::http::{Request, Response};
+pub use super::utilities::{get_millis};
+pub use super::workers::{AppState, Context, RequestMessage};
