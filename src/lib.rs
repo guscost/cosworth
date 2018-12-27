@@ -3,6 +3,7 @@ extern crate actix_web;
 extern crate bytes;
 extern crate diesel;
 extern crate futures;
+extern crate num_cpus;
 extern crate serde_json;
 extern crate serde;
 

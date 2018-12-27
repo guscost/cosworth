@@ -1,5 +1,6 @@
 pub use std::collections::HashMap;
 pub use futures::Future;
+pub use num_cpus::{get as num_cpus};
 
 pub use actix::{SyncArbiter as ActixSyncArbiter, System as ActixSystem};
 pub use actix_web::error::*;

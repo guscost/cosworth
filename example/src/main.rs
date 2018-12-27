@@ -1,6 +1,5 @@
 extern crate bytes;
 extern crate env_logger;
-extern crate num_cpus;
 
 #[macro_use]
 extern crate diesel;
@@ -30,46 +29,16 @@ fn main() {
   std::env::set_var("RUST_LOG", "actix_web=info");
   env_logger::init();
 
-  // read hostname param
-  let host = match std::env::var("COSWORTH_HOST") {
-    Ok(v) => v,
-    Err(_e) => "0.0.0.0:8080".to_owned()
-  };
-
-  // determine number of request processors
-  let processors_num = match std::env::var("COSWORTH_PROCESSORS_NUM") {
-    Ok(v) => v.parse::<usize>().expect("COSWORTH_PROCESSORS_NUM must be an integer."),
-    Err(_e) => num_cpus::get()
-  };
-
   // create DB connection pool and address for request processor actors
   let db_url = std::env::var("COSWORTH_DATABASE_URL").expect("COSWORTH_DATABASE_URL not found.");
   let db_pool = postgres!(db_url);
 
-  // start actix system
-  let sys = ActixSystem::new("cosworth-system");
-
-  // init processor actors
-  println!("Starting {} request processors...", processors_num);
-  let processors = processors!(processors_num, db_pool);
-  
   // start server
-  server::new(move || {
-    let context = Context{processors: processors.clone()};
-    let app = app!(context);
-    middleware!(app, Logger);
-
-    route!(app, "/hello", index);
-    route!(app, "/todos", todo_list);
-    route!(app, "/todos/{id}", todo_detail);
-
-    return app;
-  })
-    .maxconnrate(4096)
-    .bind(host.to_owned()).unwrap()
-    .start();
-
-  // run actix system
-  println!("Serving requests at http://{}...", host);
-  sys.run();
+  cosworth!(
+    context!(db_pool),
+    middleware!(Logger),
+    route!("/hello", index),
+    route!("/todos", todo_list),
+    route!("/todos/{id}", todo_detail)
+  );
 }
