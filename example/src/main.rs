@@ -17,9 +17,9 @@ mod models;
 mod schema;
 
 use cosworth::prelude::*;
-use endpoints::index::index;
-use endpoints::todos::todo_list;
-use endpoints::todo::todo_detail;
+use endpoints::index::IndexEndpoint;
+use endpoints::todos::TodoListEndpoint;
+use endpoints::todo::TodoDetailEndpoint;
 
 
 fn main() {
@@ -37,8 +37,8 @@ fn main() {
   cosworth!(
     context!(db_pool),
     middleware!(Logger),
-    route!("/hello", index),
-    route!("/todos", todo_list),
-    route!("/todos/{id}", todo_detail)
+    route!("/hello", IndexEndpoint),
+    route!("/todos", TodoListEndpoint),
+    route!("/todos/{id}", TodoDetailEndpoint)
   );
 }

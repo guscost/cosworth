@@ -4,7 +4,6 @@ use cosworth::prelude::*;
 
 
 pub struct IndexEndpoint {}
-endpoint!(IndexEndpoint, index);
 
 impl Endpoint for IndexEndpoint {
   fn get(&self, _context: &Processor, _request: Request) -> Result<Response, Error> {

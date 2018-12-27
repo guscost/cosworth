@@ -6,7 +6,6 @@ use serde_json;
 
 
 pub struct TodoDetailEndpoint {}
-endpoint!(TodoDetailEndpoint, todo_detail);
 
 impl Endpoint for TodoDetailEndpoint {
   fn get(&self, context: &Processor, request: Request) -> Result<Response, Error> {

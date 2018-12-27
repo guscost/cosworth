@@ -6,7 +6,7 @@ authors = ["Gus Cost <guscost@gmail.com>"]
 [dependencies]
 bytes = "0.4.11"
 chrono = "0.4.6"
-cosworth = "0.1.3"
+cosworth = { path = ".." }
 diesel = { version = "1.3.3", features = ["extras", "postgres"] }
 env_logger = "0.5.13"
 futures = "0.1.25"

@@ -9,7 +9,6 @@ use schema;
 
 
 pub struct TodoListEndpoint{}
-endpoint!(TodoListEndpoint, todo_list);
 
 impl Endpoint for TodoListEndpoint {
 
