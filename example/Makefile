@@ -17,7 +17,7 @@ build/cleanup:
 deploy: build/deploy build/cleanup
 	docker run -it --rm \
 		--network cosworth-example \
-		-e DATABASE_URL=postgres://root@cosworth-example-database/cosworth_example \
+		-e COSWORTH_DATABASE_URL=postgres://root@cosworth-example-database/cosworth_example \
 		-p 8080:8080 cosworth-example/deploy:latest
 
 # Debug targets
@@ -42,7 +42,7 @@ debug: build/debug build/cleanup debug/migrate
 	docker run -it --rm \
 		--network cosworth-example \
 		--name cosworth-example \
-		-e DATABASE_URL=postgres://cosworth-example-database/cosworth_example \
+		-e COSWORTH_DATABASE_URL=postgres://cosworth-example-database/cosworth_example \
 		-v $(shell pwd)/src:/build/src \
 		-p 8080:8080 cosworth-example/debug:latest
 
