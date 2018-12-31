@@ -14,7 +14,6 @@ impl Endpoint for TodoListEndpoint {
 
   fn get(&self, context: &Context, _request: Request) -> Result<Response, Error> {
     use schema::todos::dsl::*;
-    use models::todo::*;
     let conn: &PgConnection = &context.db.get().unwrap();
     let db_results = todos.filter(done.eq(false))
       .limit(50)
