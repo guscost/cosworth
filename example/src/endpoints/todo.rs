@@ -1,8 +1,9 @@
 use bytes::Bytes;
-use cosworth;
 use cosworth::prelude::*;
 use diesel::prelude::*;
 use serde_json;
+
+use models::todo::*;
 
 
 pub struct TodoDetailEndpoint {}
@@ -13,19 +14,14 @@ impl Endpoint for TodoDetailEndpoint {
     match path_id.parse::<i64>() {
       Ok(n) => {
         use schema::todos::dsl::*;
-        use models::todo::*;
-
         let db_result = todos.find(n)
           .load::<Todo>(context.db)
           .expect("Error loading todo");
 
         match db_result.len() {
           1 => {
-            let json = TodoJson {
-              id: Some(db_result[0].id as u64),
-              name: db_result[0].name.clone(),
-              done: Some(db_result[0].done)
-            };
+            let json = TodoJson::from(&db_result[0]);
+
             Ok(Response {
               status: 200,
               headers: HeaderMap::new(),

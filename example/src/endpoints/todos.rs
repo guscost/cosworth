@@ -19,9 +19,7 @@ impl Endpoint for TodoListEndpoint {
       .load::<Todo>(context.db)
       .expect("Error loading todos");
 
-    let results: Vec<TodoJson> = db_results.iter().map(|r| {
-      TodoJson { id: Some(r.id as u64), name: r.name.clone(), done: Some(r.done) }
-    }).collect();
+    let results: Vec<TodoJson> = db_results.iter().map(|r| TodoJson::from(r)).collect();
 
     return Ok(Response {
       status: 200,
@@ -35,28 +33,8 @@ impl Endpoint for TodoListEndpoint {
 
     match serde_json::from_slice::<TodoJson>(&request.body) {
       Ok(obj)  => {
-
-        let new_id: u64;
-        match obj.id {
-            Some(x) => new_id = x,
-            None => new_id = get_millis()
-        }
-
-        let new_done: bool;
-        match obj.done {
-            Some(x) => new_done = x,
-            None => new_done = false
-        }
-
-        //let uuid = format!("{}", uuid::Uuid::new_v4());
-        let new_todo = Todo {
-            id: new_id as i64,
-            name: obj.name.clone(),
-            done: new_done
-        };
-
         diesel::insert_into(todos)
-            .values(&new_todo)
+            .values(&Todo::from(&obj))
             .execute(context.db)
             .map_err(|e| {
                 println!("{:?}", e);
@@ -68,16 +46,12 @@ impl Endpoint for TodoListEndpoint {
             .load::<Todo>(context.db)
             .map_err(|_| ErrorInternalServerError("Error loading todos"))?;
 
-        let queried_todo = items.pop().unwrap();
+        let queried_todo = TodoJson::from(&items.pop().unwrap());
 
         return Ok(Response {
           status: 200,
           headers: HeaderMap::new(),
-          body: Bytes::from(serde_json::to_string(&TodoJson {
-            id: Some(queried_todo.id as u64),
-            name: queried_todo.name,
-            done: Some(queried_todo.done)
-          })?)
+          body: Bytes::from(serde_json::to_string(&queried_todo)?)
         });
       },
       Err(e) => {
