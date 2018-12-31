@@ -12,7 +12,7 @@ pub struct TodoListEndpoint{}
 
 impl Endpoint for TodoListEndpoint {
 
-  fn get(&self, context: &Context, _request: Request) -> Result<Response, Error> {
+  fn get(&self, context: &Context, _request: &Request) -> Result<Response, Error> {
     use schema::todos::dsl::*;
     let db_results = todos.filter(done.eq(false))
       .limit(50)
@@ -28,7 +28,7 @@ impl Endpoint for TodoListEndpoint {
     });
   }
 
-  fn post(&self, context: &Context, request: Request) -> Result<Response, Error> {
+  fn post(&self, context: &Context, request: &Request) -> Result<Response, Error> {
     use self::schema::todos::dsl::*;
 
     match serde_json::from_slice::<TodoJson>(&request.body) {

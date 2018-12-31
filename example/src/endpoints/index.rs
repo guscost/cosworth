@@ -6,7 +6,7 @@ use cosworth::prelude::*;
 pub struct IndexEndpoint {}
 
 impl Endpoint for IndexEndpoint {
-  fn get(&self, _context: &Context, _request: Request) -> Result<Response, Error> {
+  fn get(&self, _context: &Context, _request: &Request) -> Result<Response, Error> {
     return Ok(Response {
       status: 200,
       headers: HeaderMap::new(),

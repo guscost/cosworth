@@ -9,7 +9,7 @@ use models::todo::*;
 pub struct TodoDetailEndpoint {}
 
 impl Endpoint for TodoDetailEndpoint {
-  fn get(&self, context: &Context, request: Request) -> Result<Response, Error> {
+  fn get(&self, context: &Context, request: &Request) -> Result<Response, Error> {
     let path_id = request.path_params.get("id").unwrap();
     match path_id.parse::<i64>() {
       Ok(n) => {

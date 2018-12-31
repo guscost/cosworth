@@ -36,7 +36,7 @@ impl<'a> Handler<RequestMessage<'a>> for Worker {
 
   fn handle(&mut self, msg: RequestMessage, _: &mut Self::Context) -> Self::Result {
     let context = Context { db: &self.db_pool.get().unwrap() };
-    return msg.endpoint.handle(&context, msg.request);
+    return msg.endpoint.handle(&context, &msg.request);
   }
 }
 
