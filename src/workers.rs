@@ -7,13 +7,12 @@ use diesel::r2d2::{ConnectionManager, Pool};
 use endpoints::Endpoint;
 use http::{Request, Response};
 
-
 /// request processing actor. We are going to run N of them in parallel.
-pub struct Context {
-  pub db: Pool<ConnectionManager<PgConnection>>
+pub struct Worker {
+  pub db_pool: Pool<ConnectionManager<PgConnection>>
 }
-impl Actor for Context {
-  // actix actors have their own "context", this is confusing but reuse the name anyway
+impl Actor for Worker {
+  // actix actors have their own "context", this is confusing but reuse the name below
   type Context = SyncContext<Self>;
 }
 
@@ -26,14 +25,20 @@ impl<'a> Message for RequestMessage<'a> {
   type Result = Result<Response, Error>;
 }
 
+/// "unwrapped" context struct will be passed into endpoint methods
+pub struct Context<'a> {
+  pub db: &'a PgConnection
+}
+
 /// process a request
-impl<'a> Handler<RequestMessage<'a>> for Context {
+impl<'a> Handler<RequestMessage<'a>> for Worker {
   type Result = Result<Response, Error>;
 
   fn handle(&mut self, msg: RequestMessage, _: &mut Self::Context) -> Self::Result {
-    return msg.endpoint.handle(&self, msg.request);
+    let context = Context { db: &self.db_pool.get().unwrap() };
+    return msg.endpoint.handle(&context, msg.request);
   }
 }
 
 // actix app state with pool of workers
-pub struct AppState { pub workers: Addr<Context> }
+pub struct AppState { pub workers: Addr<Worker> }

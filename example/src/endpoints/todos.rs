@@ -14,10 +14,9 @@ impl Endpoint for TodoListEndpoint {
 
   fn get(&self, context: &Context, _request: Request) -> Result<Response, Error> {
     use schema::todos::dsl::*;
-    let conn: &PgConnection = &context.db.get().unwrap();
     let db_results = todos.filter(done.eq(false))
       .limit(50)
-      .load::<Todo>(conn)
+      .load::<Todo>(context.db)
       .expect("Error loading todos");
 
     let results: Vec<TodoJson> = db_results.iter().map(|r| {
@@ -56,11 +55,9 @@ impl Endpoint for TodoListEndpoint {
             done: new_done
         };
 
-        let conn: &PgConnection = &context.db.get().unwrap();
-
         diesel::insert_into(todos)
             .values(&new_todo)
-            .execute(conn)
+            .execute(context.db)
             .map_err(|e| {
                 println!("{:?}", e);
                 ErrorInternalServerError("Error inserting todo")
@@ -68,7 +65,7 @@ impl Endpoint for TodoListEndpoint {
 
         let mut items = todos
             .filter(name.eq(&obj.name))
-            .load::<Todo>(conn)
+            .load::<Todo>(context.db)
             .map_err(|_| ErrorInternalServerError("Error loading todos"))?;
 
         let queried_todo = items.pop().unwrap();

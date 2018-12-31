@@ -14,10 +14,9 @@ impl Endpoint for TodoDetailEndpoint {
       Ok(n) => {
         use schema::todos::dsl::*;
         use models::todo::*;
-        let conn: &PgConnection = &context.db.get().unwrap();
 
         let db_result = todos.find(n)
-          .load::<Todo>(conn)
+          .load::<Todo>(context.db)
           .expect("Error loading todo");
 
         match db_result.len() {

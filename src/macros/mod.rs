@@ -20,7 +20,7 @@ macro_rules! cosworth {
 
     // init workers
     println!("Starting {} request workers...", workers_num);
-    let workers = ActixSyncArbiter::start(workers_num, move || Context{db: $db_pool.clone()});
+    let workers = ActixSyncArbiter::start(workers_num, move || Worker{db_pool: $db_pool.clone()});
 
     // start actix server
     server::new(move || {
