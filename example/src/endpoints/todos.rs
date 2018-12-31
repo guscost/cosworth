@@ -34,17 +34,17 @@ impl Endpoint for TodoListEndpoint {
     match serde_json::from_slice::<TodoJson>(&request.body) {
       Ok(obj)  => {
         diesel::insert_into(todos)
-            .values(&Todo::from(&obj))
-            .execute(context.db)
-            .map_err(|e| {
-                println!("{:?}", e);
-                ErrorInternalServerError("Error inserting todo")
-            })?;
+          .values(&Todo::from(&obj))
+          .execute(context.db)
+          .map_err(|e| {
+            println!("{:?}", e);
+            ErrorInternalServerError("Error inserting todo")
+          })?;
 
         let mut items = todos
-            .filter(name.eq(&obj.name))
-            .load::<Todo>(context.db)
-            .map_err(|_| ErrorInternalServerError("Error loading todos"))?;
+          .filter(name.eq(&obj.name))
+          .load::<Todo>(context.db)
+          .map_err(|_| ErrorInternalServerError("Error loading todos"))?;
 
         let queried_todo = TodoJson::from(&items.pop().unwrap());
 

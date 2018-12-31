@@ -21,11 +21,11 @@ pub struct Response {
 
 /// default values for an HTTP response
 impl Default for Response {
-    fn default() -> Response {
-      return Response {
-        status: 404,
-        headers: HeaderMap::new(),
-        body: Bytes::new()
-      };
-    }
+  fn default() -> Response {
+    return Response {
+      status: 404,
+      headers: HeaderMap::new(),
+      body: Bytes::new()
+    };
+  }
 }
