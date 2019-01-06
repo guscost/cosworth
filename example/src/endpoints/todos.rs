@@ -1,11 +1,8 @@
-use bytes::Bytes;
 use cosworth::prelude::*;
 use diesel;
 use diesel::prelude::*;
-use serde_json;
 
 use models::todo::*;
-use schema;
 
 
 pub struct TodoListEndpoint{}
@@ -21,18 +18,13 @@ impl Endpoint for TodoListEndpoint {
 
     let results: Vec<TodoJson> = db_results.iter().map(|r| TodoJson::from(r)).collect();
 
-    return Ok(Response {
-      status: 200,
-      headers: HeaderMap::new(),
-      body: Bytes::from(serde_json::to_string(&results)?)
-    });
+    return Response::new(200, results);
   }
 
   fn post(&self, context: &Context, request: &Request) -> Result<Response, Error> {
-    use self::schema::todos::dsl::*;
-
     match serde_json::from_slice::<TodoJson>(&request.body) {
       Ok(obj)  => {
+        use schema::todos::dsl::*;
         diesel::insert_into(todos)
           .values(&Todo::from(&obj))
           .execute(context.db)
@@ -48,14 +40,10 @@ impl Endpoint for TodoListEndpoint {
 
         let queried_todo = TodoJson::from(&items.pop().unwrap());
 
-        return Ok(Response {
-          status: 200,
-          headers: HeaderMap::new(),
-          body: Bytes::from(serde_json::to_string(&queried_todo)?)
-        });
+        return Response::new(200, queried_todo);
       },
       Err(e) => {
-        return Err(ErrorBadRequest(e));
+        return Response::new(400, json!({"error": e.to_string()}))
       }
     }
   }

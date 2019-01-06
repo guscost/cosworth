@@ -2,6 +2,9 @@ use std::collections::HashMap;
 use actix_web::http::HeaderMap;
 use bytes::Bytes;
 
+use serde_json;
+use serde::Serialize;
+
 
 /// important parts of an HTTP request
 pub struct Request {
@@ -17,6 +20,15 @@ pub struct Response {
   pub status: u16,
   pub headers: HeaderMap,
   pub body: Bytes,
+}
+impl Response {
+  pub fn new(status: u16, body: impl Serialize) -> Result<Self, actix_web::Error> {
+    Ok(Self {
+      status: status,
+      headers: HeaderMap::new(),
+      body: Bytes::from(serde_json::to_string(&body)?)
+    })
+  }
 }
 
 /// default values for an HTTP response

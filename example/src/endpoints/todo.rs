@@ -1,7 +1,6 @@
 use bytes::Bytes;
 use cosworth::prelude::*;
 use diesel::prelude::*;
-use serde_json;
 
 use models::todo::*;
 
@@ -20,20 +19,10 @@ impl Endpoint for TodoDetailEndpoint {
 
         match db_result.len() {
           1 => {
-            let json = TodoJson::from(&db_result[0]);
-
-            Ok(Response {
-              status: 200,
-              headers: HeaderMap::new(),
-              body: Bytes::from(serde_json::to_string(&json)?)
-            })
+            Response::new(200, TodoJson::from(&db_result[0]))
           },
           _ => {
-            Ok(Response {
-              status: 404,
-              headers: HeaderMap::new(),
-              body: Bytes::from("{\"detail\": \"Not found\"}")
-            })
+            Response::new(404, json!({"detail": "Not found"}))
           }
         }
       },
