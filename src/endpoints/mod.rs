@@ -4,6 +4,7 @@ use http::{Request, Response};
 use workers::Context;
 
 
+/// all REST API endpoints impl this trait
 pub trait Endpoint: Sync {
   fn handle (&self, context: &Context, request: &Request) -> Result<Response, Error> {
     match &request.method[..] {

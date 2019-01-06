@@ -30,7 +30,7 @@ impl Endpoint for TodoDetailEndpoint {
         Ok(Response {
           status: 400,
           headers: HeaderMap::new(),
-          body: Bytes::from(hello!())
+          body: Bytes::from(cosworth::hello())
         })
       }
     }

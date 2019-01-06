@@ -12,7 +12,7 @@ pub struct Worker {
   pub db_pool: Pool<ConnectionManager<PgConnection>>
 }
 impl Actor for Worker {
-  // actix actors have their own "context", this is confusing but reuse the name below
+  // actix actors have their own "Context" concept, this is confusing
   type Context = SyncContext<Self>;
 }
 
@@ -25,7 +25,7 @@ impl<'a> Message for RequestMessage<'a> {
   type Result = Result<Response, Error>;
 }
 
-/// "unwrapped" context struct will be passed into endpoint methods
+/// "unwrapped" request context struct will be passed into endpoint methods
 pub struct Context<'a> {
   pub db: &'a PgConnection
 }
@@ -40,5 +40,5 @@ impl<'a> Handler<RequestMessage<'a>> for Worker {
   }
 }
 
-// actix app state with pool of workers
+/// actix app state with pool of workers
 pub struct AppState { pub workers: Addr<Worker> }

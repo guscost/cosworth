@@ -24,7 +24,7 @@ use endpoints::todo::TodoDetailEndpoint;
 
 
 fn main() {
-  println!("{}", hello!());
+  println!("{}", cosworth::hello());
 
   // start logging
   std::env::set_var("RUST_LOG", "actix_web=info");
@@ -38,7 +38,7 @@ fn main() {
   cosworth!(
     context!(db_pool),
     middleware!(Logger),
-    route!("/hello", IndexEndpoint),
+    route!("/", IndexEndpoint),
     route!("/todos", TodoListEndpoint),
     route!("/todos/{id}", TodoDetailEndpoint)
   );
