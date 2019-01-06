@@ -1,8 +1,8 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
 
+// TODO: use database instead of app server
 /// timestamp snowflake ID generator
-/// TODO: use database instead of app server
 pub fn get_millis() -> u64 {
   let start = SystemTime::now();
   let since_epoch = start.duration_since(UNIX_EPOCH)

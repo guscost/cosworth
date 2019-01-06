@@ -7,6 +7,8 @@ use serde::Serialize;
 
 
 /// important parts of an HTTP request
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub struct Request {
   pub method: String,
   pub path_params: HashMap<String, String>,
@@ -16,11 +18,15 @@ pub struct Request {
 }
 
 /// important parts of an HTTP response
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub struct Response {
   pub status: u16,
   pub headers: HeaderMap,
   pub body: Bytes,
 }
+
+/// constructors for an HTTP response
 impl Response {
   pub fn new(status: u16, body: impl Serialize) -> Result<Self, actix_web::Error> {
     Ok(Self {
