@@ -18,7 +18,7 @@ impl Endpoint for TodoListEndpoint {
 
     let results: Vec<TodoJson> = db_results.iter().map(|r| TodoJson::from(r)).collect();
 
-    return Response::new(200, results);
+    Response::new(200, results)
   }
 
   fn post(&self, context: &Context, request: &Request) -> Result<Response, Error> {
@@ -40,10 +40,10 @@ impl Endpoint for TodoListEndpoint {
 
         let queried_todo = TodoJson::from(&items.pop().unwrap());
 
-        return Response::new(200, queried_todo);
+        Response::new(200, queried_todo)
       },
       Err(e) => {
-        return Response::new(400, json!({"error": e.to_string()}))
+        Response::new(400, json!({"error": e.to_string()}))
       }
     }
   }

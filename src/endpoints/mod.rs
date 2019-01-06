@@ -16,16 +16,16 @@ pub trait Endpoint: Sync {
     }
   }
   fn get(&self, _context: &Context, _request: &Request) -> Result<Response, Error> {
-    return Ok(Response { status: 405, ..Default::default() });
+    Ok(Response { status: 405, ..Default::default() })
   }
   fn post(&self, _context: &Context, _request: &Request) -> Result<Response, Error> {
-    return Ok(Response { status: 405, ..Default::default() });
+    Ok(Response { status: 405, ..Default::default() })
   }
   fn put(&self, _context: &Context, _request: &Request) -> Result<Response, Error> {
-    return Ok(Response { status: 405, ..Default::default() });
+    Ok(Response { status: 405, ..Default::default() })
   }
   fn delete(&self, _context: &Context, _request: &Request) -> Result<Response, Error> {
-    return Ok(Response { status: 405, ..Default::default() });
+    Ok(Response { status: 405, ..Default::default() })
   }
   fn options(&self, _context: &Context, request: &Request) -> Result<Response, Error> {
     // Tell CORS to go away
@@ -45,10 +45,10 @@ pub trait Endpoint: Sync {
       "Access-Control-Allow-Origin",
       "*".parse().unwrap()
     );
-    return Ok(Response {
+    Ok(Response {
       status: 200,
       headers: headers,
       ..Default::default()
-    });
+    })
   }
 }

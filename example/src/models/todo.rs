@@ -19,20 +19,20 @@ pub struct TodoJson {
 
 impl From<&Todo> for TodoJson {
   fn from(obj: &Todo) -> Self {
-    return Self {
+    Self {
       id: Some(obj.id as u64),
       name: obj.name.clone(),
       done: Some(obj.done)
-    };
+    }
   }
 }
 
 impl From<&TodoJson> for Todo {
   fn from(obj: &TodoJson) -> Self {
-    return Self {
+    Self {
       id: match obj.id { Some(x) => x, None => get_millis() } as i64,
       name: obj.name.clone(),
       done: match obj.done { Some(x) => x, None => false }
-    };
+    }
   }
 }

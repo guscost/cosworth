@@ -27,7 +27,7 @@ macro_rules! cosworth {
       let context = AppState{workers: workers.clone()};
       let app = App::with_state(context);
       cosworth!(app $($tail)*);
-      return app;
+      app
     })
       .maxconnrate(4096)
       .bind(host.to_owned()).unwrap()
@@ -43,37 +43,37 @@ macro_rules! cosworth {
   };
   ($app:tt, route!($route:tt, $endpoint:tt) $($tail:tt)*) => {
     let $app = $app.resource($route, |resource| {
-      return resource.route().f(|req| -> Box<Future<Item = HttpResponse, Error = Error>> {
+      resource.route().f(|req| -> Box<Future<Item = HttpResponse, Error = Error>> {
         let req = req.clone();
-        return req.body()
+        req.body()
           .from_err()
           .and_then(move |body| {
-          let mut path_params = HashMap::new();
-          for (k, v) in req.match_info().iter() { path_params.insert(k.to_owned(), v.to_owned()); }
-          let request_message = RequestMessage {
-            endpoint: &$endpoint{},
-            request: Request {
-              method: req.method().to_string(),
-              path_params: path_params,
-              query_params: req.query().to_owned(),
-              headers: req.headers().to_owned(),
-              body: body
-            }
-          };
-          return req.state().workers
-            .send(request_message)
-            .from_err()
-            .and_then(|res| match res {
-              Ok(obj) => {
-                let mut resp = HttpResponse::build(http::StatusCode::from_u16(obj.status).unwrap());
-                for (k, v) in obj.headers.iter() { resp.header(k, v.to_owned()); }
-                Ok(resp.content_type("application/json").body(obj.body))
-              },
-              Err(_) => Ok(HttpResponse::InternalServerError().into()),
-            });
+            let mut path_params = HashMap::new();
+            for (k, v) in req.match_info().iter() { path_params.insert(k.to_owned(), v.to_owned()); }
+            let request_message = RequestMessage {
+              endpoint: &$endpoint{},
+              request: Request {
+                method: req.method().to_string(),
+                path_params: path_params,
+                query_params: req.query().to_owned(),
+                headers: req.headers().to_owned(),
+                body: body
+              }
+            };
+            req.state().workers
+              .send(request_message)
+              .from_err()
+              .and_then(|res| match res {
+                Ok(obj) => {
+                  let mut resp = HttpResponse::build(http::StatusCode::from_u16(obj.status).unwrap());
+                  for (k, v) in obj.headers.iter() { resp.header(k, v.to_owned()); }
+                  Ok(resp.content_type("application/json").body(obj.body))
+                },
+                Err(_) => Ok(HttpResponse::InternalServerError().into()),
+              })
           })
-          .responder();
-      });
+          .responder()
+      })
     });
     cosworth!($app $($tail)*);
   };
