@@ -1,6 +1,6 @@
 [package]
 name = "cosworth"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["Gus Cost <guscost@gmail.com>"]
 description = "A tool for making web services"
 repository = "https://github.com/guscost/cosworth"
